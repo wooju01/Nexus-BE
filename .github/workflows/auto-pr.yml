@@ -160,19 +160,19 @@ jobs:
           <details>
           <summary>엔드포인트 상세</summary>
 
-          \`\`\`
+          \\\`\\\`\\\`
           METHOD /api/v1/endpoint
-          \`\`\`
+          \\\`\\\`\\\`
 
           **Request**
-          \`\`\`json
+          \\\`\\\`\\\`json
           {}
-          \`\`\`
+          \\\`\\\`\\\`
 
           **Response**
-          \`\`\`json
+          \\\`\\\`\\\`json
           {}
-          \`\`\`
+          \\\`\\\`\\\`
 
           </details>
 
