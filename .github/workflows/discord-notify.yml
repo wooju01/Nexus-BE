@@ -86,21 +86,21 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          AUTHOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          HEAD: ${{ github.event.pull_request.head.ref }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          ADDITIONS: ${{ github.event.pull_request.additions }}
+          DELETIONS: ${{ github.event.pull_request.deletions }}
+          CHANGED: ${{ github.event.pull_request.changed_files }}
         run: |
-          ACTION="${{ github.event.action }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-          PR_URL="${{ github.event.pull_request.html_url }}"
-          AUTHOR="${{ github.actor }}"
-          AVATAR="https://github.com/${{ github.actor }}.png"
-          REPO="${{ github.repository }}"
-          MERGED="${{ github.event.pull_request.merged }}"
-          HEAD="${{ github.event.pull_request.head.ref }}"
-          BASE="${{ github.event.pull_request.base.ref }}"
-          ADDITIONS="${{ github.event.pull_request.additions }}"
-          DELETIONS="${{ github.event.pull_request.deletions }}"
-          CHANGED="${{ github.event.pull_request.changed_files }}"
+          AVATAR="https://github.com/${AUTHOR}.png"
 
           case "$ACTION" in
             opened)
