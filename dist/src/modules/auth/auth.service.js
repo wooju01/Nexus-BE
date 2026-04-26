@@ -81,6 +81,35 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
         return this.issueToken(user.id, user.email);
     }
+    async socialLogin(data) {
+        const account = await this.prisma.account.findUnique({
+            where: {
+                provider_providerAccountId: {
+                    provider: data.provider,
+                    providerAccountId: data.providerAccountId,
+                },
+            },
+            include: { user: true },
+        });
+        if (account)
+            return this.issueToken(account.user.id, account.user.email);
+        let user = await this.prisma.user.findUnique({
+            where: { email: data.email },
+        });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: { email: data.email, name: data.name },
+            });
+        }
+        await this.prisma.account.create({
+            data: {
+                userId: user.id,
+                provider: data.provider,
+                providerAccountId: data.providerAccountId,
+            },
+        });
+        return this.issueToken(user.id, user.email);
+    }
     issueToken(userId, email) {
         const payload = { sub: userId, email };
         return {

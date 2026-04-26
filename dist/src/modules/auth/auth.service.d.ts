@@ -12,5 +12,13 @@ export declare class AuthService {
     login(dto: LoginDto): Promise<{
         accessToken: string;
     }>;
+    socialLogin(data: {
+        provider: string;
+        providerAccountId: string;
+        email: string;
+        name: string;
+    }): Promise<{
+        accessToken: string;
+    }>;
     private issueToken;
 }

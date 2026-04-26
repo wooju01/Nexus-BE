@@ -53,3 +53,6 @@ GET {{baseUrl2}}/
 ### 인증 필요 테스트 (토큰 있음 → 200 예상)
 GET {{baseUrl2}}/
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3NzE4OTk4NiwiZXhwIjoxNzc3MTkwODg2fQ.nR_Kc2I2SnDMBQHvWMkplLrPS2-A8gpIy59jriGI6yo
+
+### Google OAuth 로그인 테스트
+http://localhost:3000/auth/google
