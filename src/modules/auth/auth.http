@@ -1,0 +1,55 @@
+@baseUrl = http://localhost:3000/v1
+@baseUrl2 = http://localhost:3000
+
+### 회원가입
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test5@test.com",
+  "name": "테스트유저",
+  "password": "12345678"
+}
+
+###
+
+### 로그인
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "12345678"
+}
+
+###
+
+### 이메일 중복 테스트
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "name": "중복유저",
+  "password": "12345678"
+}
+
+###
+
+### 비밀번호 오류 테스트
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "wrongpassword"
+}
+
+### 인증 필요 테스트 (토큰 없음 → 401 예상)
+GET {{baseUrl2}}/
+
+###
+
+### 인증 필요 테스트 (토큰 있음 → 200 예상)
+GET {{baseUrl2}}/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3NzE4OTk4NiwiZXhwIjoxNzc3MTkwODg2fQ.nR_Kc2I2SnDMBQHvWMkplLrPS2-A8gpIy59jriGI6yo

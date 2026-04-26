@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
+const jwt_strategy_1 = require("../../common/guards/jwt-strategy");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -23,7 +24,7 @@ exports.AuthModule = AuthModule = __decorate([
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map
