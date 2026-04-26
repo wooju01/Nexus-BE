@@ -13,19 +13,22 @@ const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("../../common/guards/jwt-strategy");
 const google_strategy_1 = require("../../common/guards/google-strategy");
+const kakao_strategy_1 = require("../../common/guards/kakao-strategy");
+const passport_1 = require("@nestjs/passport");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_ACCESS_SECRET,
-                signOptions: { expiresIn: '15m' },
+                signOptions: { expiresIn: "15m" },
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, google_strategy_1.GoogleStrategy],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, google_strategy_1.GoogleStrategy, kakao_strategy_1.KakaoStrategy],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

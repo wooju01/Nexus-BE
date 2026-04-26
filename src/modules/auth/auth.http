@@ -56,3 +56,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a
 
 ### Google OAuth 로그인 테스트
 http://localhost:3000/auth/google
+
+### Kakao OAuth 로그인 테스트
+http://localhost:3000/auth/kakao

@@ -1,10 +1,20 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import type { Request, Response } from 'express';
-import { AuthService } from './auth.service';
-import { SignupDto } from './dto/signup.dto';
-import { LoginDto } from './dto/login.dto';
-import { Public } from '../../common/decorators/public.decorator';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+  Req,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import type { Request, Response } from "express";
+import { AuthService } from "./auth.service";
+import { SignupDto } from "./dto/signup.dto";
+import { LoginDto } from "./dto/login.dto";
+import { Public } from "../../common/decorators/public.decorator";
 
 @Controller("auth")
 export class AuthController {
@@ -32,6 +42,19 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(AuthGuard("google"))
   async googleCallback(@Req() req: Request, @Res() res: Response) {
+    const token = await this.authService.socialLogin(req.user as any);
+    res.redirect(`http://localhost:3000?accessToken=${token.accessToken}`);
+  }
+
+  @Public()
+  @Get("kakao")
+  @UseGuards(AuthGuard("kakao"))
+  async kakaoAuth() {}
+
+  @Public()
+  @Get("kakao/callback")
+  @UseGuards(AuthGuard("kakao"))
+  async kakaoCallback(@Req() req: Request, @Res() res: Response) {
     const token = await this.authService.socialLogin(req.user as any);
     res.redirect(`http://localhost:3000?accessToken=${token.accessToken}`);
   }
