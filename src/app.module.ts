@@ -5,6 +5,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { PrismaModule } from "./prisma/prisma.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { CalendarModule } from "./modules/calendar/calendar.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
@@ -19,7 +20,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, CalendarModule],
   controllers: [AppController],
   providers: [
     AppService,
