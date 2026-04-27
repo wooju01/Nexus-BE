@@ -107,12 +107,12 @@ Authorization: Bearer <accessToken>
 ###
 
 ### 내 상태 변경 (ONLINE | AWAY | DND | OFFLINE)
-PATCH {{baseUrl}}/auth/me/presence
+PATCH {{baseUrl}}/auth/profile/presence
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU0ODU5LCJleHAiOjE3NzcyNTU3NTl9.V4SuFC8jdyg2bwUEAvXUYxnL9eOkVRBrS07kaJC10LM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU1MzU4LCJleHAiOjE3NzcyNTYyNTh9.35fXJh3FruSqsa6s7j3NlzB51plSOcQDfLkucoZGqVE
 
 {
-  "status": "AWAY"
+  "status": "OFFLINE"
 }
 
 ### 비밀번호 변경

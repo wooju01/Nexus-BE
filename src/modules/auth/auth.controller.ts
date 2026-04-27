@@ -95,7 +95,7 @@ export class AuthController {
     return this.authService.updateProfile(user.userId, dto);
   }
 
-  @Patch("me/presence")
+  @Patch("profile/presence")
   @HttpCode(HttpStatus.OK)
   async updatePresence(@Req() req: Request, @Body() dto: UpdatePresenceDto) {
     const user = req.user as { userId: string };
