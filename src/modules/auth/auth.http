@@ -1,8 +1,8 @@
-@baseUrl = http://localhost:3000/v1
+@baseUrl = http://localhost:3000
 @baseUrl2 = http://localhost:3000
 
 ### 회원가입
-POST {{baseUrl}}/auth/signup
+POST {{baseUrl2}}/auth/signup
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 ###
 
 ### 로그인
-POST {{baseUrl}}/auth/login
+POST {{baseUrl2}}/auth/login
 Content-Type: application/json
 
 {
@@ -25,7 +25,7 @@ Content-Type: application/json
 ###
 
 ### 이메일 중복 테스트
-POST {{baseUrl}}/auth/signup
+POST {{baseUrl2}}/auth/signup
 Content-Type: application/json
 
 {
@@ -37,13 +37,32 @@ Content-Type: application/json
 ###
 
 ### 비밀번호 오류 테스트
-POST {{baseUrl}}/auth/login
+POST {{baseUrl2}}/auth/login
 Content-Type: application/json
 
 {
   "email": "test@test.com",
   "password": "wrongpassword"
 }
+
+###
+
+### 로그아웃 (Authorization 헤더에 accessToken 필요)
+POST http://localhost:3000/auth/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjUzNjc5LCJleHAiOjE3NzcyNTQ1Nzl9.9fWy-GlmC3jR5cQWimab171NTxMXh1sCiHk3bb7vyiI
+
+
+###
+
+### 토큰 갱신
+POST {{baseUrl2}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "<refreshToken>"
+}
+
+###
 
 ### 인증 필요 테스트 (토큰 없음 → 401 예상)
 GET {{baseUrl2}}/

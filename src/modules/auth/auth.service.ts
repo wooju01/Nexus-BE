@@ -1,9 +1,16 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+
+const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
 @Injectable()
 export class AuthService {
@@ -12,7 +19,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // 이메일/비밀번호 회원가입
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -20,33 +26,28 @@ export class AuthService {
     if (exists) throw new ConflictException('이미 사용 중인 이메일입니다.');
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-
     const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        name: dto.name,
-        password: hashedPassword,
-      },
+      data: { email: dto.email, name: dto.name, password: hashedPassword },
     });
 
-    return this.issueToken(user.id, user.email);
+    return this.issueTokens(user.id, user.email);
   }
 
-  // 이메일/비밀번호 로그인
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
     // OAuth 전용 계정(password null)은 이메일/비밀번호 로그인 불가
-    if (!user || !user.password) throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
+    if (!user || !user.password)
+      throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
 
     const isValid = await bcrypt.compare(dto.password, user.password);
-    if (!isValid) throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
+    if (!isValid)
+      throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
 
-    return this.issueToken(user.id, user.email);
+    return this.issueTokens(user.id, user.email);
   }
 
-  // 소셜 로그인 처리: 기존 계정과 연결하거나 신규 생성 후 토큰 발급
   async socialLogin(data: {
     provider: string;
     providerAccountId: string;
@@ -63,9 +64,8 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (account) return this.issueToken(account.user.id, account.user.email);
+    if (account) return this.issueTokens(account.user.id, account.user.email);
 
-    // 같은 이메일 유저가 있으면 소셜 계정 연결, 없으면 신규 생성
     let user = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -84,13 +84,40 @@ export class AuthService {
       },
     });
 
-    return this.issueToken(user.id, user.email);
+    return this.issueTokens(user.id, user.email);
   }
 
-  private issueToken(userId: string, email: string) {
-    const payload = { sub: userId, email };
-    return {
-      accessToken: this.jwtService.sign(payload),
-    };
+  async logout(userId: string) {
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
+  }
+
+  async refresh(token: string) {
+    const stored = await this.prisma.refreshToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!stored || stored.expiresAt < new Date()) {
+      if (stored) await this.prisma.refreshToken.delete({ where: { token } });
+      throw new UnauthorizedException('유효하지 않은 Refresh Token입니다.');
+    }
+
+    // Token Rotation: 기존 토큰 삭제 후 새 토큰 발급
+    await this.prisma.refreshToken.delete({ where: { token } });
+    return this.issueTokens(stored.user.id, stored.user.email);
+  }
+
+  private async issueTokens(userId: string, email: string) {
+    const accessToken = this.jwtService.sign({ sub: userId, email });
+
+    const refreshToken = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS);
+
+    await this.prisma.refreshToken.create({
+      data: { token: refreshToken, userId, expiresAt },
+    });
+
+    return { accessToken, refreshToken };
   }
 }
