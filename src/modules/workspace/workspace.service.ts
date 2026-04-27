@@ -2,11 +2,11 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import type { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import type { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { Role } from '@prisma/client';
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import type { CreateWorkspaceDto } from "./dto/create-workspace.dto";
+import type { UpdateWorkspaceDto } from "./dto/update-workspace.dto";
+import { Role } from "@prisma/client";
 
 @Injectable()
 export class WorkspaceService {

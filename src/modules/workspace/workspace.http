@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3000
-@accessToken = 여기에_로그인후_발급된_토큰_붙여넣기
-@workspaceId = 여기에_생성후_반환된_id_붙여넣기
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3NzI5ODI0NiwiZXhwIjoxNzc3Mjk5MTQ2fQ.ONal0ez71ayYqMrTvE-2Ah5fkN6Vr_eTB-abr1nz0K4
+@workspaceId = cmoh9ipo90003h4vft1tea1mv
 
 ### 워크스페이스 목록 조회 (내가 속한 것만)
 GET {{baseUrl}}/workspaces
