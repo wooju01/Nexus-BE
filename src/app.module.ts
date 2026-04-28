@@ -9,7 +9,7 @@ import { CalendarModule } from "./modules/calendar/calendar.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { WorkspaceModule } from './modules/workspace/workspace.module';
-
+import { MemberModule } from './modules/member/member.module'
 
 
 /**
@@ -23,7 +23,7 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule],
+  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule],
   controllers: [AppController],
   providers: [
     AppService,
