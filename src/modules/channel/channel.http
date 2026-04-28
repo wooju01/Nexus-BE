@@ -1,0 +1,94 @@
+@baseUrl = http://localhost:3000
+@accessToken = 여기에_토큰_붙여넣기
+@workspaceId = 여기에_워크스페이스id_붙여넣기
+@channelId = 여기에_채널id_붙여넣기
+
+### 채널 목록 조회
+GET {{baseUrl}}/workspaces/{{workspaceId}}/channels
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 생성 (public)
+POST {{baseUrl}}/workspaces/{{workspaceId}}/channels
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "general",
+  "topic": "전체 공지",
+  "isPrivate": false
+}
+
+###
+
+### 채널 생성 (private)
+POST {{baseUrl}}/workspaces/{{workspaceId}}/channels
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "secret",
+  "isPrivate": true
+}
+
+###
+
+### 채널 단건 조회
+GET {{baseUrl}}/channels/{{channelId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 수정 (OWNER/ADMIN만) — topic 변경
+PATCH {{baseUrl}}/channels/{{channelId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "topic": "수정된 topic"
+}
+
+###
+
+### 채널 참여 (public만 가능) — 204 예상
+POST {{baseUrl}}/channels/{{channelId}}/members/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 참여 중복 시도 — 409 예상
+POST {{baseUrl}}/channels/{{channelId}}/members/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### Private 채널 참여 시도 — 403 예상
+POST {{baseUrl}}/channels/private채널id직접입력/members/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 멤버 목록
+GET {{baseUrl}}/channels/{{channelId}}/members
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 나가기 — 204 예상
+DELETE {{baseUrl}}/channels/{{channelId}}/members/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 나가기 중복 시도 — 404 예상
+DELETE {{baseUrl}}/channels/{{channelId}}/members/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 채널 삭제 (OWNER/ADMIN만) — 204 예상
+DELETE {{baseUrl}}/channels/{{channelId}}
+Authorization: Bearer {{accessToken}}
+
+###

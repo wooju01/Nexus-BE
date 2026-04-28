@@ -10,7 +10,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { MemberModule } from './modules/member/member.module'
-
+import { ChannelModule } from './modules/channel/channel.module';
 
 /**
  * 루트 모듈.
@@ -23,7 +23,7 @@ import { MemberModule } from './modules/member/member.module'
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule],
+  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule],
   controllers: [AppController],
   providers: [
     AppService,
