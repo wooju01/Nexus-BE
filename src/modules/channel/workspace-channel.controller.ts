@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, Req } from "@nestjs/common";
 import type { Request } from "express";
-import { ChannelService } from "../channel/channel.service";
-import type { CreateChannelDto } from "../channel/dto/channel.dto";
+import { ChannelService } from "./channel.service";
+import type { CreateChannelDto } from "./dto/channel.dto";
 
 @Controller("workspaces/:workspaceId/channels")
 export class WorkspaceChannelController {
