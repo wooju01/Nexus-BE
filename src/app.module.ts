@@ -11,6 +11,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { MemberModule } from './modules/member/member.module'
 import { ChannelModule } from './modules/channel/channel.module';
+import { MessageModule } from './modules/message/message.module';
 
 /**
  * 루트 모듈.
@@ -23,7 +24,7 @@ import { ChannelModule } from './modules/channel/channel.module';
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule],
+  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule, MessageModule],
   controllers: [AppController],
   providers: [
     AppService,
