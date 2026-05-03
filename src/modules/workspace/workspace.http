@@ -41,10 +41,11 @@ Authorization: Bearer {{accessToken}}
 DELETE {{baseUrl}}/workspaces/{{workspaceId}}
 Authorization: Bearer {{accessToken}}
 
-###
 
 ### 권한 없는 유저 접근 테스트 — 403 예상
 GET {{baseUrl}}/workspaces/존재하지않는id
 Authorization: Bearer {{accessToken}}
 
-###
+### 안읽은 메시지 요약
+GET {{baseUrl}}/workspaces/{{workspaceId}}/unread-summary
+Authorization: Bearer {{accessToken}}
