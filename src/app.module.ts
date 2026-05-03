@@ -12,6 +12,7 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { MemberModule } from './modules/member/member.module'
 import { ChannelModule } from './modules/channel/channel.module';
 import { MessageModule } from './modules/message/message.module';
+import { GatewayModule } from './modules/gateway/gateway.module';
 
 /**
  * 루트 모듈.
@@ -24,7 +25,7 @@ import { MessageModule } from './modules/message/message.module';
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule, MessageModule],
+  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule, MessageModule, GatewayModule],
   controllers: [AppController],
   providers: [
     AppService,

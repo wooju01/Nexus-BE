@@ -34,7 +34,7 @@ export class MessageService {
     return this.prisma.message.findMany({
       where: {
         channelId,
-        parentId: null,       // 루트 메시지만 (스레드 답글 제외)
+        parentId: null, // 루트 메시지만 (스레드 답글 제외)
         deletedAt: null,
         ...cursorCondition,
       },
@@ -47,7 +47,9 @@ export class MessageService {
         replies: {
           // 스레드 참여자 아바타 스택용 — 최근 3명
           where: { deletedAt: null },
-          select: { author: { select: { id: true, name: true, avatar: true } } },
+          select: {
+            author: { select: { id: true, name: true, avatar: true } },
+          },
           orderBy: { createdAt: "desc" },
           take: 3,
         },
@@ -85,7 +87,11 @@ export class MessageService {
   }
 
   // PATCH /messages/:messageId
-  async updateMessage(userId: string, messageId: string, dto: UpdateMessageDto) {
+  async updateMessage(
+    userId: string,
+    messageId: string,
+    dto: UpdateMessageDto,
+  ) {
     const message = await this.findMessageOrThrow(messageId);
 
     if (message.authorId !== userId) {
@@ -118,6 +124,7 @@ export class MessageService {
       where: { id: messageId },
       data: { deletedAt: new Date() },
     });
+    return { channelId: message.channelId };
   }
 
   // GET /messages/:messageId/replies
@@ -151,12 +158,19 @@ export class MessageService {
   }
 
   // POST /channels/:channelId/read-markers
-  async updateReadMarker(userId: string, channelId: string, dto: ReadMarkerDto) {
+  async updateReadMarker(
+    userId: string,
+    channelId: string,
+    dto: ReadMarkerDto,
+  ) {
     await this.requireChannelMember(userId, channelId);
 
     return this.prisma.readMarker.upsert({
       where: { userId_channelId: { userId, channelId } },
-      update: { lastReadMessageId: dto.lastReadMessageId, lastReadAt: new Date() },
+      update: {
+        lastReadMessageId: dto.lastReadMessageId,
+        lastReadAt: new Date(),
+      },
       create: { userId, channelId, lastReadMessageId: dto.lastReadMessageId },
     });
   }
@@ -178,6 +192,7 @@ export class MessageService {
       update: {},
       create: { messageId, userId, emoji: dto.emoji },
     });
+    return { channelId: message.channelId };
   }
 
   // DELETE /messages/:messageId/reactions/:emoji
@@ -185,15 +200,18 @@ export class MessageService {
   async removeReaction(userId: string, messageId: string, emoji: string) {
     const reaction = await this.prisma.messageReaction.findUnique({
       where: { messageId_userId_emoji: { messageId, userId, emoji } },
+      include: { message: { select: { channelId: true } } },
     });
     if (!reaction) throw new NotFoundException("리액션을 찾을 수 없습니다.");
 
     await this.prisma.messageReaction.delete({
       where: { messageId_userId_emoji: { messageId, userId, emoji } },
     });
+
+    return { channelId: reaction.message.channelId };
   }
 
-  /// --- 헬퍼 메서드 ---
+  // 유틸리티 메서드
 
   private async findMessageOrThrow(messageId: string) {
     const message = await this.prisma.message.findUnique({
@@ -216,9 +234,7 @@ export class MessageService {
     const membership = await this.prisma.membership.findUnique({
       where: { userId_workspaceId: { userId, workspaceId } },
     });
-    return (
-      membership?.role === Role.OWNER || membership?.role === Role.ADMIN
-    );
+    return membership?.role === Role.OWNER || membership?.role === Role.ADMIN;
   }
 
   private async getMessageCreatedAt(messageId: string) {
