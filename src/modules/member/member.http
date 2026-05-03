@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3000
-@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3NzM0MDk1NCwiZXhwIjoxNzc3MzQxODU0fQ.Boxn0E8NvY7nNZSNrtPfXcy1afe_39CdijvOzdsFqvE
-@workspaceId = cmoh9uw7o0001y2vfkcpcz2u5
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3Nzc4OTAyOCwiZXhwIjoxNzc3Nzg5OTI4fQ.9ReC5nQPjN7v_tIM8y5vIwFXGdkQt2DeldkndkOUrB8
+@workspaceId = cmoh9ipo90003h4vft1tea1mv
 @targetUserId = cmofh15kv0000msvf7k356lno
 
 ### 멤버 목록 조회
