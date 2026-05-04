@@ -1,0 +1,76 @@
+### Invitation API — REST Client (.http) 스크래치
+### VS Code REST Client / IntelliJ HTTP Client / `httpie` 등에서 사용.
+### 변수는 환경에 맞춰 채워주세요.
+
+@host = http://localhost:3000
+@workspaceId = REPLACE_WITH_WORKSPACE_ID
+@accessToken = REPLACE_WITH_ACCESS_TOKEN
+@token = REPLACE_WITH_INVITATION_TOKEN
+
+### 1) 초대 생성 — OWNER/ADMIN 만
+POST {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "role": "MEMBER"
+}
+
+### 2) Pending 초대 목록 — OWNER/ADMIN 만
+GET {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer {{accessToken}}
+
+### 3) 토큰으로 초대 정보 조회 — Public (인증 불필요)
+GET {{host}}/invitations/{{token}}
+
+### 4) 초대 수락 — 인증 필요
+POST {{host}}/invitations/{{token}}/accept
+Authorization: Bearer {{accessToken}}
+
+### 5) 초대 취소 — OWNER/ADMIN 만
+DELETE {{host}}/invitations/{{token}}
+Authorization: Bearer {{accessToken}}
+
+### -------- 검증 시나리오 --------
+
+### 6) 권한 없는 사용자가 초대 시도 (MEMBER) → 403 기대
+POST {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer MEMBER_LEVEL_ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "email": "bob@example.com"
+}
+
+### 7) 잘못된 이메일 → 400 (class-validator 거절)
+POST {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "not-an-email"
+}
+
+### 8) OWNER 역할 요청 → 400 (IsIn 거절)
+POST {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "owner@example.com",
+  "role": "OWNER"
+}
+
+### 9) 같은 이메일 중복 요청 → 409 (이미 pending 존재)
+POST {{host}}/workspaces/{{workspaceId}}/invitations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "alice@example.com"
+}
+
+### 10) 다른 이메일로 수락 시도 → 403
+POST {{host}}/invitations/{{token}}/accept
+Authorization: Bearer DIFFERENT_USER_ACCESS_TOKEN

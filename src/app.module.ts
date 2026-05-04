@@ -8,15 +8,16 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { CalendarModule } from "./modules/calendar/calendar.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
-import { WorkspaceModule } from './modules/workspace/workspace.module';
-import { MemberModule } from './modules/member/member.module'
-import { ChannelModule } from './modules/channel/channel.module';
-import { MessageModule } from './modules/message/message.module';
-import { GatewayModule } from './modules/gateway/gateway.module';
-import { DmModule } from './modules/dm/dm.module';
+
+import { WorkspaceModule } from "./modules/workspace/workspace.module";
+import { MemberModule } from "./modules/member/member.module";
+import { ChannelModule } from "./modules/channel/channel.module";
+import { MessageModule } from "./modules/message/message.module";
+import { GatewayModule } from "./modules/gateway/gateway.module";
+import { DmModule } from "./modules/dm/dm.module";
+import { InvitationModule } from "./modules/invitation/invitation.module";
+import { MailModule } from "./modules/mail/mail.module";
 import { LabelModule } from './modules/label/label.module';
-
-
 /**
  * 루트 모듈.
  *
@@ -28,7 +29,19 @@ import { LabelModule } from './modules/label/label.module';
  * provider 토큰 방식으로 등록한다.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, CalendarModule, WorkspaceModule, MemberModule, ChannelModule, MessageModule, GatewayModule, DmModule, LabelModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    CalendarModule,
+    WorkspaceModule,
+    MemberModule,
+    ChannelModule,
+    MessageModule,
+    GatewayModule,
+    DmModule,
+    InvitationModule,
+    MailModule,LabelModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,
