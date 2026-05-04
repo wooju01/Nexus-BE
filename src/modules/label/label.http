@@ -1,0 +1,54 @@
+@baseUrl = http://localhost:3000
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9maDE1a3YwMDAwbXN2ZjdrMzU2bG5vIiwiZW1haWwiOiJ0ZXN0NUB0ZXN0LmNvbSIsImlhdCI6MTc3Nzc4OTAyOCwiZXhwIjoxNzc3Nzg5OTI4fQ.9ReC5nQPjN7v_tIM8y5vIwFXGdkQt2DeldkndkOUrB8
+@workspaceId = cmoh9ipo90003h4vft1tea1mv
+# 라벨 생성 후 응답 id 복사
+@labelId =
+
+### 라벨 목록 조회
+GET {{baseUrl}}/workspaces/{{workspaceId}}/labels
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 라벨 생성
+POST {{baseUrl}}/workspaces/{{workspaceId}}/labels
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "버그",
+  "color": "#EF4444",
+  "description": "버그 수정"
+}
+
+###
+
+### 라벨 생성 (중복 이름) — 409 예상
+POST {{baseUrl}}/workspaces/{{workspaceId}}/labels
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "버그",
+  "color": "#3B82F6"
+}
+
+###
+
+### 라벨 수정
+PATCH {{baseUrl}}/labels/{{labelId}}
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "긴급 버그",
+  "color": "#DC2626"
+}
+
+###
+
+### 라벨 삭제 — 204 예상
+DELETE {{baseUrl}}/labels/{{labelId}}
+Authorization: Bearer {{accessToken}}
+
+###
