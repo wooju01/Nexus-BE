@@ -61,6 +61,51 @@ export class WorkspaceService {
     await this.prisma.workspace.delete({ where: { id: workspaceId } });
   }
 
+// GET /workspaces/:id/unread-summary
+async getUnreadSummary(userId: string, workspaceId: string) {
+  await this.requireMembership(userId, workspaceId);
+
+  const channelMembers = await this.prisma.channelMember.findMany({
+    where: {
+      userId,
+      channel: { workspaceId },
+    },
+    select: {
+      channelId: true,
+      channel: { select: { type: true } },
+    },
+  });
+
+  if (channelMembers.length === 0) return [];
+
+  const channelIds = channelMembers.map((cm) => cm.channelId);
+
+  const readMarkers = await this.prisma.readMarker.findMany({
+    where: { userId, channelId: { in: channelIds } },
+  });
+  const markerMap = new Map(readMarkers.map((rm) => [rm.channelId, rm.lastReadAt]));
+
+  const results = await Promise.all(
+    channelMembers.map(async ({ channelId, channel }) => {
+      const lastReadAt = markerMap.get(channelId);
+      const unreadCount = await this.prisma.message.count({
+        where: {
+          channelId,
+          parentId: null,
+          deletedAt: null,
+          authorId: { not: userId },
+          ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
+        },
+      });
+      return { channelId, channelType: channel.type, unreadCount };
+    }),
+  );
+
+  // unreadCount 0인 채널은 제외
+  return results.filter((r) => r.unreadCount > 0);
+}
+
+
   // --- 헬퍼 메서드: 멤버십과 역할 검증 ---
 
   private async requireMembership(userId: string, workspaceId: string) {
