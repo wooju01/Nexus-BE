@@ -8,6 +8,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { CalendarModule } from "./modules/calendar/calendar.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
+
 import { WorkspaceModule } from "./modules/workspace/workspace.module";
 import { MemberModule } from "./modules/member/member.module";
 import { ChannelModule } from "./modules/channel/channel.module";
@@ -16,7 +17,7 @@ import { GatewayModule } from "./modules/gateway/gateway.module";
 import { DmModule } from "./modules/dm/dm.module";
 import { InvitationModule } from "./modules/invitation/invitation.module";
 import { MailModule } from "./modules/mail/mail.module";
-
+import { LabelModule } from './modules/label/label.module';
 /**
  * 루트 모듈.
  *
@@ -39,7 +40,7 @@ import { MailModule } from "./modules/mail/mail.module";
     GatewayModule,
     DmModule,
     InvitationModule,
-    MailModule,
+    MailModule,LabelModule
   ],
   controllers: [AppController],
   providers: [
