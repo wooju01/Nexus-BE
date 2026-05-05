@@ -18,6 +18,8 @@ import { DmModule } from "./modules/dm/dm.module";
 import { InvitationModule } from "./modules/invitation/invitation.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { LabelModule } from './modules/label/label.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { ActivityModule } from './modules/activity/activity.module';
 /**
  * 루트 모듈.
  *
@@ -40,7 +42,10 @@ import { LabelModule } from './modules/label/label.module';
     GatewayModule,
     DmModule,
     InvitationModule,
-    MailModule,LabelModule
+    MailModule,
+    LabelModule,
+    NotificationModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [
