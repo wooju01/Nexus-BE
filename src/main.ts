@@ -21,8 +21,19 @@ async function bootstrap() {
 
   // app.setGlobalPrefix("v1");
 
+  const allowedOrigins = (
+    process.env.CORS_ORIGIN ?? "http://localhost:3001"
+  ).split(",").map((o) => o.trim());
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3001",
+    origin: (origin, callback) => {
+      // 서버 간 요청(origin 없음) 또는 허용 목록이면 통과
+      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
   });
 
