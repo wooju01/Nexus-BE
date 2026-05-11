@@ -20,6 +20,7 @@ import { MailModule } from "./modules/mail/mail.module";
 import { LabelModule } from './modules/label/label.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { ProjectModule } from './modules/project/project.module';
 /**
  * 루트 모듈.
  *
@@ -46,6 +47,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     LabelModule,
     NotificationModule,
     ActivityModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [
