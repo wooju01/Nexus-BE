@@ -3,7 +3,7 @@ services:
     name: nexus-be
     runtime: node
     buildCommand: npm ci && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && node dist/main
+    startCommand: npx prisma migrate deploy && node dist/src/main
     envVars:
       - key: NODE_ENV
         value: production
