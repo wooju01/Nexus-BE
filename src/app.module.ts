@@ -21,6 +21,7 @@ import { LabelModule } from './modules/label/label.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { ProjectModule } from './modules/project/project.module';
+import { TaskModule } from './modules/task/task.module';
 /**
  * 루트 모듈.
  *
@@ -48,6 +49,7 @@ import { ProjectModule } from './modules/project/project.module';
     NotificationModule,
     ActivityModule,
     ProjectModule,
+    TaskModule,
   ],
   controllers: [AppController],
   providers: [

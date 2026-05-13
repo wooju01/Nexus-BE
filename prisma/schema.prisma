@@ -37,10 +37,17 @@ enum ChannelType {
 }
 
 enum Priority {
-  LOW
-  NORMAL
-  HIGH
-  URGENT
+  P1
+  P2
+  P3
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
 }
 
 enum RsvpStatus {
@@ -301,6 +308,7 @@ model Project {
   name        String
   description String?
   iconUrl     String?
+  taskCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -329,22 +337,24 @@ model Column {
 
 // 태스크 (업무)
 model Task {
-  id           String    @id @default(cuid())
+  id           String     @id @default(cuid())
+  number       Int
   projectId    String
-  columnId     String
-  parentTaskId String? // 서브태스크이면 상위 태스크 ID
+  columnId     String?
+  parentTaskId String?
   createdById  String
   title        String
-  description  Json? // Tiptap JSON
-  priority     Priority  @default(NORMAL)
-  order        Int // 컬럼 내 순서 (드래그앤드롭)
+  description  Json?
+  priority     Priority   @default(P2)
+  status       TaskStatus @default(BACKLOG)
+  order        Int        @default(0)
   dueDate      DateTime?
   deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  column      Column           @relation(fields: [columnId], references: [id])
+  column      Column?          @relation(fields: [columnId], references: [id])
   parentTask  Task?            @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
   subTasks    Task[]           @relation("SubTasks")
   creator     User             @relation("TaskCreator", fields: [createdById], references: [id])
@@ -353,10 +363,12 @@ model Task {
   comments    TaskComment[]
   attachments TaskAttachment[]
 
+  @@unique([projectId, number])
   @@index([projectId])
   @@index([columnId, order])
   @@index([parentTaskId])
   @@index([dueDate])
+  @@index([status])
 }
 
 // 다중 담당자 (태스크 ↔ 유저 다대다)
