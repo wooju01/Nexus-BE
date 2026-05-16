@@ -12,7 +12,8 @@ export class TaskController {
 
   @Get('projects/:projectId/tasks')
   getTasks(@Param('projectId') projectId: string, @Request() req) {
-    return this.taskService.getTasks(projectId, req.user.id);
+    const { userId } = req.user as { userId: string };
+    return this.taskService.getTasks(projectId, userId);
   }
 
   @Post('projects/:projectId/tasks')
@@ -21,22 +22,26 @@ export class TaskController {
     @Body() dto: CreateTaskDto,
     @Request() req,
   ) {
-    return this.taskService.createTask(projectId, req.user.id, dto);
+    const { userId } = req.user as { userId: string };
+    return this.taskService.createTask(projectId, userId, dto);
   }
 
   @Get('tasks/:id')
   getTask(@Param('id') id: string, @Request() req) {
-    return this.taskService.getTask(id, req.user.id);
+    const { userId } = req.user as { userId: string };
+    return this.taskService.getTask(id, userId);
   }
 
   @Patch('tasks/:id')
   updateTask(@Param('id') id: string, @Body() dto: UpdateTaskDto, @Request() req) {
-    return this.taskService.updateTask(id, req.user.id, dto);
+    const { userId } = req.user as { userId: string };
+    return this.taskService.updateTask(id, userId, dto);
   }
 
   @Delete('tasks/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteTask(@Param('id') id: string, @Request() req) {
-    return this.taskService.deleteTask(id, req.user.id);
+    const { userId } = req.user as { userId: string };
+    return this.taskService.deleteTask(id, userId);
   }
 }

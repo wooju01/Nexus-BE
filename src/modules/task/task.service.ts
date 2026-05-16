@@ -50,6 +50,7 @@ export class TaskService {
         },
         include: {
           assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+          labels: { include: { label: true } },
           creator: { select: { id: true, name: true, avatar: true } },
         },
       });
@@ -105,6 +106,7 @@ export class TaskService {
       } as any,
       include: {
         assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        labels: { include: { label: true } },
         creator: { select: { id: true, name: true, avatar: true } },
       },
     });
