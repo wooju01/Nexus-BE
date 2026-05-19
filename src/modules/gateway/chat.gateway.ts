@@ -114,6 +114,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(`channel:${channelId}`).emit(event, payload);
   }
 
+  // ── 프로젝트(보드) 룸 ─────────────────────────────────────────────────
+  //
+  // 보드 페이지에 머무는 동안 클라이언트가 project.join 으로 룸에 합류하면
+  // TaskService 에서 broadcastToProject 로 동일 보드를 보는 모든 사용자에게
+  // task.created / task.updated / task.deleted 이벤트가 전달된다.
+
+  @SubscribeMessage("project.join")
+  handleProjectJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() projectId: string,
+  ) {
+    client.join(`project:${projectId}`);
+  }
+
+  @SubscribeMessage("project.leave")
+  handleProjectLeave(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() projectId: string,
+  ) {
+    client.leave(`project:${projectId}`);
+  }
+
+  /** TaskService 등 외부 모듈에서 보드 이벤트를 브로드캐스트할 때 사용. */
+  broadcastToProject(event: string, projectId: string, payload: unknown) {
+    this.server.to(`project:${projectId}`).emit(event, payload);
+  }
+
   // 사용자 상태 업데이트 및 클라이언트에 알림
   private async setPresence(userId: string, status: PresenceStatus) {
     await this.prisma.user.update({

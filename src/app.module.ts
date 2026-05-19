@@ -22,6 +22,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
+import { TaskCommentModule } from './modules/task-comment/task-comment.module';
 /**
  * 루트 모듈.
  *
@@ -50,6 +51,7 @@ import { TaskModule } from './modules/task/task.module';
     ActivityModule,
     ProjectModule,
     TaskModule,
+    TaskCommentModule,
   ],
   controllers: [AppController],
   providers: [
