@@ -1,13 +1,572 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// ═══════════════════════════════════════════════════════════
+// Prisma Schema — 협업 대시보드 프로젝트
+// 85개 API 엔드포인트를 모두 지원하는 데이터 모델
+// Total: 25 models, 7 enums
+// ═══════════════════════════════════════════════════════════
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
-
 datasource db {
   provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  DND
+  OFFLINE
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+enum ChannelType {
+  CHANNEL
+  DM
+  GROUP_DM
+}
+
+enum Priority {
+  P1
+  P2
+  P3
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum RsvpStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  MAYBE
+}
+
+enum ProjectRole {
+  MANAGER
+  MEMBER
+}
+
+enum NotificationType {
+  MESSAGE_MENTION
+  DM_RECEIVED
+  CHANNEL_INVITED
+  WORKSPACE_INVITED
+  TASK_ASSIGNED
+  TASK_DUE_SOON
+  TASK_COMMENTED
+  EVENT_UPCOMING
+  EVENT_INVITED
+}
+
+// ═══════════════════════════════════════════════════════════
+// 1. AUTH DOMAIN (인증)
+// ═══════════════════════════════════════════════════════════
+
+model User {
+  id         String         @id @default(cuid())
+  email      String         @unique
+  password   String? // OAuth 전용 계정은 null
+  name       String
+  avatar     String?
+  status     PresenceStatus @default(OFFLINE)
+  lastSeenAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  accounts             Account[]
+  refreshTokens        RefreshToken[]
+  memberships          Membership[]
+  invitationsSent      Invitation[]          @relation("InvitationCreator")
+  channelMemberships   ChannelMember[]
+  sentMessages         Message[]
+  messageAttachments   MessageAttachment[]
+  reactions            MessageReaction[]
+  readMarkers          ReadMarker[]
+  createdTasks         Task[]                @relation("TaskCreator")
+  taskAssignees        TaskAssignee[]
+  taskComments         TaskComment[]
+  taskAttachments      TaskAttachment[]
+  createdEvents        CalendarEvent[]
+  eventParticipations  CalendarParticipant[]
+  notifications        Notification[]
+  notificationSettings NotificationSettings?
+  activities           Activity[]
+  projectMemberships   ProjectMember[]
+
+  @@index([email])
+}
+
+// OAuth 소셜 로그인 연결 정보 (Google/Kakao/GitHub)
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String // 'google' | 'kakao' | 'github'
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// JWT Refresh Token (Redis 병행 가능)
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 2. WORKSPACE DOMAIN (워크스페이스)
+// ═══════════════════════════════════════════════════════════
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  iconUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships Membership[]
+  channels    Channel[]
+  projects    Project[]
+  labels      Label[]
+  events      CalendarEvent[]
+  invitations Invitation[]
+  activities  Activity[]
+}
+
+// 워크스페이스 멤버십 (User ↔ Workspace, 권한 포함)
+model Membership {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        Role     @default(MEMBER)
+  joinedAt    DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+// 워크스페이스 초대
+model Invitation {
+  id          String    @id @default(cuid())
+  token       String    @unique @default(cuid())
+  workspaceId String
+  email       String?
+  role        Role      @default(MEMBER)
+  createdBy   String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creator   User      @relation("InvitationCreator", fields: [createdBy], references: [id])
+
+  @@index([workspaceId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 3. CHAT DOMAIN (채널/DM/메시지)
+// ═══════════════════════════════════════════════════════════
+
+// 채널 (일반 채널 + DM + 그룹 DM 모두 여기)
+model Channel {
+  id          String      @id @default(cuid())
+  workspaceId String
+  type        ChannelType @default(CHANNEL)
+  name        String? // DM은 null
+  topic       String?
+  isPrivate   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     ChannelMember[]
+  messages    Message[]
+  readMarkers ReadMarker[]
+
+  @@index([workspaceId])
+  @@index([type])
+}
+
+// 채널 멤버 (누가 이 채널에 참여 중인지)
+model ChannelMember {
+  id        String   @id @default(cuid())
+  channelId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([userId])
+}
+
+// 메시지 (채널과 DM 모두 여기에 저장)
+model Message {
+  id        String    @id @default(cuid())
+  channelId String
+  authorId  String
+  content   Json // Tiptap JSON
+  parentId  String? // 스레드 답글이면 원본 메시지 ID
+  editedAt  DateTime?
+  deletedAt DateTime? // soft delete
+  createdAt DateTime  @default(now())
+
+  channel     Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author      User                @relation(fields: [authorId], references: [id])
+  parent      Message?            @relation("MessageThread", fields: [parentId], references: [id])
+  replies     Message[]           @relation("MessageThread")
+  attachments MessageAttachment[]
+  reactions   MessageReaction[]
+
+  @@index([channelId, createdAt])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+// 메시지 첨부파일
+model MessageAttachment {
+  id           String   @id @default(cuid())
+  messageId    String
+  uploaderId   String
+  fileName     String
+  fileUrl      String // S3/R2 URL
+  fileSize     Int
+  mimeType     String
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+
+  message  Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploader User    @relation(fields: [uploaderId], references: [id])
+
+  @@index([messageId])
+}
+
+// 메시지 이모지 리액션 (👍, ❤️, 😂 등)
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+// 읽음 표시 (사이드바 "3" 배지의 핵심)
+model ReadMarker {
+  userId            String
+  channelId         String
+  lastReadMessageId String?
+  lastReadAt        DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@id([userId, channelId])
+  @@index([channelId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 4. PROJECT & TASK DOMAIN (프로젝트 & 업무)
+// ═══════════════════════════════════════════════════════════
+
+model Project {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  iconUrl     String?
+  taskCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members    ProjectMember[]
+  columns    Column[]
+  tasks      Task[]
+  activities Activity[]
+
+  @@index([workspaceId])
+}
+
+// 프로젝트 멤버 (워크스페이스 멤버 중 해당 프로젝트에 초대된 사람)
+model ProjectMember {
+  id        String      @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// 칸반 보드 컬럼 (To Do / In Progress / Done 등)
+model Column {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  color     String?
+  order     Int // 보드 내 순서
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId, order])
+}
+
+// 태스크 (업무)
+model Task {
+  id           String     @id @default(cuid())
+  number       Int
+  projectId    String
+  columnId     String?
+  parentTaskId String?
+  createdById  String
+  title        String
+  description  Json?
+  priority     Priority   @default(P2)
+  status       TaskStatus @default(BACKLOG)
+  order        Int        @default(0)
+  dueDate      DateTime?
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  column      Column?          @relation(fields: [columnId], references: [id])
+  parentTask  Task?            @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subTasks    Task[]           @relation("SubTasks")
+  creator     User             @relation("TaskCreator", fields: [createdById], references: [id])
+  assignees   TaskAssignee[]
+  labels      TaskLabel[]
+  comments    TaskComment[]
+  attachments TaskAttachment[]
+
+  @@unique([projectId, number])
+  @@index([projectId])
+  @@index([columnId, order])
+  @@index([parentTaskId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+// 다중 담당자 (태스크 ↔ 유저 다대다)
+model TaskAssignee {
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+  assignedBy String? // 누가 할당했는지
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+  @@index([userId])
+}
+
+// 태스크 ↔ 라벨 연결 (다대다)
+model TaskLabel {
+  taskId    String
+  labelId   String
+  createdAt DateTime @default(now())
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@index([labelId])
+}
+
+// 태스크 댓글
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  content   Json // Tiptap JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
+}
+
+// 태스크 첨부파일
+model TaskAttachment {
+  id         String   @id @default(cuid())
+  taskId     String
+  uploaderId String
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  createdAt  DateTime @default(now())
+
+  task     Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploader User @relation(fields: [uploaderId], references: [id])
+
+  @@index([taskId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 5. LABEL DOMAIN (라벨/태그)
+// ═══════════════════════════════════════════════════════════
+
+model Label {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  color       String // HEX: "#3B82F6"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     TaskLabel[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 6. CALENDAR DOMAIN (캘린더)
+// ═══════════════════════════════════════════════════════════
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  workspaceId String
+  createdById String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean  @default(false)
+  location    String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace    Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creator      User                  @relation(fields: [createdById], references: [id])
+  participants CalendarParticipant[]
+
+  @@index([workspaceId, startAt])
+}
+
+// 이벤트 참가자 (RSVP 포함)
+model CalendarParticipant {
+  eventId String
+  userId  String
+  status  RsvpStatus @default(PENDING)
+
+  event CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 7. NOTIFICATION DOMAIN (알림)
+// ═══════════════════════════════════════════════════════════
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  linkUrl   String? // 클릭 시 이동 경로
+  metadata  Json? // 부가 정보
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+// 알림 설정 (유저당 1개)
+model NotificationSettings {
+  userId            String  @id
+  emailMention      Boolean @default(true)
+  emailDM           Boolean @default(true)
+  emailTaskAssigned Boolean @default(true)
+  pushMention       Boolean @default(true)
+  pushDM            Boolean @default(true)
+  dndEnabled        Boolean @default(false)
+  dndStartHour      Int? // 0~23
+  dndEndHour        Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ═══════════════════════════════════════════════════════════
+// 8. ACTIVITY DOMAIN (활동 로그)
+// ═══════════════════════════════════════════════════════════
+
+model Activity {
+  id          String   @id @default(cuid())
+  workspaceId String
+  projectId   String? // 프로젝트 관련 활동이면
+  actorId     String // 행위자
+  action      String // 'task.created', 'channel.member-added' 등
+  targetType  String // 'task' | 'channel' | 'message' ...
+  targetId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  actor     User      @relation(fields: [actorId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([projectId, createdAt])
+  @@index([actorId, createdAt])
 }

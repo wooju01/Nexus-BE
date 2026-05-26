@@ -1,0 +1,126 @@
+@baseUrl = http://localhost:3000
+
+### 회원가입
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test5@test.com",
+  "name": "테스트유저",
+  "password": "12345678"
+}
+
+###
+
+### 로그인
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test5@test.com",
+  "password": "12345678"
+}
+
+###
+
+### 이메일 중복 테스트
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "name": "중복유저",
+  "password": "12345678"
+}
+
+###
+
+### 비밀번호 오류 테스트
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "wrongpassword"
+}
+
+###
+
+### 로그아웃 (Authorization 헤더에 accessToken 필요)
+POST http://localhost:3000/auth/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU1MTIwLCJleHAiOjE3NzcyNTYwMjB9.ff-11YzCerVcPT0SEyDey5F-MR3FW9ZW6uv73lNZmMo
+
+
+### 토큰 갱신
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "c7e32837-31fc-4576-b69f-72b3dddefd6e"
+}
+
+###
+
+### 인증 필요 테스트 (토큰 없음 → 401 예상)
+GET {{baseUrl}}/
+
+###
+
+### 인증 필요 테스트 (토큰 있음 → 200 예상)
+GET {{baseUrl}}/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU0ODU5LCJleHAiOjE3NzcyNTU3NTl9.V4SuFC8jdyg2bwUEAvXUYxnL9eOkVRBrS07kaJC10LM
+
+### Google OAuth 로그인 테스트
+http://localhost:3000/auth/google
+
+### Kakao OAuth 로그인 테스트
+http://localhost:3000/auth/kakao
+
+###
+
+### 내 정보 조회
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU0ODU5LCJleHAiOjE3NzcyNTU3NTl9.V4SuFC8jdyg2bwUEAvXUYxnL9eOkVRBrS07kaJC10LM
+
+###
+
+### 내 정보 수정 (name, avatar 중 원하는 것만 보내도 됨)
+PATCH {{baseUrl}}/auth/profile
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU0ODU5LCJleHAiOjE3NzcyNTU3NTl9.V4SuFC8jdyg2bwUEAvXUYxnL9eOkVRBrS07kaJC10LM
+
+{
+  "name": "새이름"
+}
+
+###
+
+### 아바타 수정
+PATCH {{baseUrl}}/auth/profile
+Content-Type: application/json
+Authorization: Bearer <accessToken>
+
+{
+  "avatar": "https://example.com/avatar.png"
+}
+
+###
+
+### 내 상태 변경 (ONLINE | AWAY | DND | OFFLINE)
+PATCH {{baseUrl}}/auth/profile/presence
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU1MzU4LCJleHAiOjE3NzcyNTYyNTh9.35fXJh3FruSqsa6s7j3NlzB51plSOcQDfLkucoZGqVE
+
+{
+  "status": "OFFLINE"
+}
+
+### 비밀번호 변경
+PATCH {{baseUrl}}/auth/password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbW9la3FrcnkwMDAwd3J2Zno0a3Q3Zm5pIiwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc3MjU1MTIwLCJleHAiOjE3NzcyNTYwMjB9.ff-11YzCerVcPT0SEyDey5F-MR3FW9ZW6uv73lNZmMo
+
+{
+  "currentPassword": "123456789",
+  "newPassword": "12345678"
+}
