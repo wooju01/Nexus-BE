@@ -211,10 +211,11 @@ model Channel {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members     ChannelMember[]
-  messages    Message[]
-  readMarkers ReadMarker[]
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedProject  Project?        // 프로젝트 전용 채널인 경우 역참조
+  members        ChannelMember[]
+  messages       Message[]
+  readMarkers    ReadMarker[]
 
   @@index([workspaceId])
   @@index([type])
@@ -309,20 +310,22 @@ model ReadMarker {
 // ═══════════════════════════════════════════════════════════
 
 model Project {
-  id          String   @id @default(cuid())
-  workspaceId String
-  name        String
-  description String?
-  iconUrl     String?
-  taskCount   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  workspaceId     String
+  name            String
+  description     String?
+  iconUrl         String?
+  taskCount       Int      @default(0)
+  linkedChannelId String?  @unique // 자동 생성된 프로젝트 전용 채널
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members    ProjectMember[]
-  columns    Column[]
-  tasks      Task[]
-  activities Activity[]
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedChannel  Channel?        @relation(fields: [linkedChannelId], references: [id], onDelete: SetNull)
+  members        ProjectMember[]
+  columns        Column[]
+  tasks          Task[]
+  activities     Activity[]
 
   @@index([workspaceId])
 }
