@@ -57,6 +57,11 @@ enum RsvpStatus {
   MAYBE
 }
 
+enum ProjectRole {
+  MANAGER
+  MEMBER
+}
+
 enum NotificationType {
   MESSAGE_MENTION
   DM_RECEIVED
@@ -102,6 +107,7 @@ model User {
   notifications        Notification[]
   notificationSettings NotificationSettings?
   activities           Activity[]
+  projectMemberships   ProjectMember[]
 
   @@index([email])
 }
@@ -312,12 +318,29 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members    ProjectMember[]
   columns    Column[]
   tasks      Task[]
   activities Activity[]
 
   @@index([workspaceId])
+}
+
+// 프로젝트 멤버 (워크스페이스 멤버 중 해당 프로젝트에 초대된 사람)
+model ProjectMember {
+  id        String      @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
 }
 
 // 칸반 보드 컬럼 (To Do / In Progress / Done 등)
