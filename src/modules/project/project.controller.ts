@@ -15,6 +15,7 @@ import { ProjectService } from "./project.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { AddProjectMemberDto } from "./dto/add-project-member.dto";
+import { UpdateProjectMemberDto } from "./dto/update-project-member.dto";
 
 @Controller("workspaces/:workspaceId/projects")
 export class WorkspaceProjectController {
@@ -85,6 +86,23 @@ export class ProjectController {
   ) {
     const { userId } = req.user as { userId: string };
     return this.projectService.addProjectMember(userId, projectId, dto);
+  }
+
+  // PATCH /projects/:id/members/:targetUserId — 역할 변경 (Manager ↔ Member)
+  @Patch(":id/members/:targetUserId")
+  updateProjectMember(
+    @Req() req: Request,
+    @Param("id") projectId: string,
+    @Param("targetUserId") targetUserId: string,
+    @Body() dto: UpdateProjectMemberDto,
+  ) {
+    const { userId } = req.user as { userId: string };
+    return this.projectService.updateProjectMember(
+      userId,
+      projectId,
+      targetUserId,
+      dto,
+    );
   }
 
   // DELETE /projects/:id/members/:targetUserId — 프로젝트 멤버 제거
