@@ -81,6 +81,7 @@ enum NotificationType {
 model User {
   id         String         @id @default(cuid())
   email      String         @unique
+  username   String?        @unique
   password   String? // OAuth 전용 계정은 null
   name       String
   avatar     String?
