@@ -63,8 +63,9 @@ export class AuthController {
   @UseGuards(AuthGuard("google"))
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     const tokens = await this.authService.socialLogin(req.user as any);
+    const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
     res.redirect(
-      `http://localhost:3000?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 
@@ -78,8 +79,9 @@ export class AuthController {
   @UseGuards(AuthGuard("kakao"))
   async kakaoCallback(@Req() req: Request, @Res() res: Response) {
     const tokens = await this.authService.socialLogin(req.user as any);
+    const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
     res.redirect(
-      `http://localhost:3000?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 
