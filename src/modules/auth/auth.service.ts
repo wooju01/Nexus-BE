@@ -139,13 +139,22 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.username) {
+      const taken = await this.prisma.user.findUnique({
+        where: { username: dto.username },
+        select: { id: true },
+      });
+      if (taken && taken.id !== userId) throw new ConflictException("이미 사용 중인 username입니다.");
+    }
+
     return this.prisma.user.update({
       where: { id: userId },
-      data: dto, // name, avatar 중 전달된 것만 업데이트
+      data: dto,
       select: {
         id: true,
         email: true,
         name: true,
+        username: true,
         avatar: true,
         status: true,
         createdAt: true,
