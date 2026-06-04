@@ -62,6 +62,13 @@ enum ProjectRole {
   MEMBER
 }
 
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
 enum NotificationType {
   MESSAGE_MENTION
   DM_RECEIVED
@@ -81,6 +88,7 @@ enum NotificationType {
 model User {
   id         String         @id @default(cuid())
   email      String         @unique
+  username   String?        @unique
   password   String? // OAuth 전용 계정은 null
   name       String
   avatar     String?
@@ -108,8 +116,11 @@ model User {
   notificationSettings NotificationSettings?
   activities           Activity[]
   projectMemberships   ProjectMember[]
+  sentFriendRequests   FriendRequest[] @relation("FriendRequestSender")
+  receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
 
   @@index([email])
+  @@index([username])
 }
 
 // OAuth 소셜 로그인 연결 정보 (Google/Kakao/GitHub)
@@ -572,4 +583,24 @@ model Activity {
   @@index([workspaceId, createdAt])
   @@index([projectId, createdAt])
   @@index([actorId, createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 9. FRIEND DOMAIN (친구)
+// ═══════════════════════════════════════════════════════════
+
+model FriendRequest {
+  id         String       @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     FriendStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  sender   User @relation("FriendRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+  @@index([senderId])
 }
