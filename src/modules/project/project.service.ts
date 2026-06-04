@@ -143,12 +143,20 @@ export class ProjectService {
   async deleteProject(userId: string, projectId: string) {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
-      select: { workspaceId: true },
+      select: { workspaceId: true, linkedChannelId: true },
     });
     if (!project) throw new NotFoundException("프로젝트를 찾을 수 없습니다.");
     await this.requireRole(userId, project.workspaceId, Role.OWNER);
 
-    await this.prisma.project.delete({ where: { id: projectId } });
+    await this.prisma.$transaction(async (tx) => {
+      // 프로젝트 먼저 삭제 (linkedChannelId 외래키 제약 해제)
+      await tx.project.delete({ where: { id: projectId } });
+
+      // 연결된 채널도 함께 삭제
+      if (project.linkedChannelId) {
+        await tx.channel.delete({ where: { id: project.linkedChannelId } });
+      }
+    });
   }
 
   // GET /projects/:id/members
