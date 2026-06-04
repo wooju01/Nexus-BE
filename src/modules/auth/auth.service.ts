@@ -31,9 +31,14 @@ export class AuthService {
     });
     if (exists) throw new ConflictException("이미 사용 중인 이메일입니다.");
 
+    const usernameTaken = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+    if (usernameTaken) throw new ConflictException("이미 사용 중인 username입니다.");
+
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
-      data: { email: dto.email, name: dto.name, password: hashedPassword },
+      data: { email: dto.email, name: dto.name, username: dto.username, password: hashedPassword },
     });
 
     return this.issueTokens(user.id, user.email);
@@ -81,8 +86,9 @@ export class AuthService {
     });
 
     if (!user) {
+      const username = await this.generateUniqueUsername(data.email);
       user = await this.prisma.user.create({
-        data: { email: data.email, name: data.name },
+        data: { email: data.email, name: data.name, username },
       });
     }
 
@@ -133,13 +139,22 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.username) {
+      const taken = await this.prisma.user.findUnique({
+        where: { username: dto.username },
+        select: { id: true },
+      });
+      if (taken && taken.id !== userId) throw new ConflictException("이미 사용 중인 username입니다.");
+    }
+
     return this.prisma.user.update({
       where: { id: userId },
-      data: dto, // name, avatar 중 전달된 것만 업데이트
+      data: dto,
       select: {
         id: true,
         email: true,
         name: true,
+        username: true,
         avatar: true,
         status: true,
         createdAt: true,
@@ -175,6 +190,16 @@ export class AuthService {
   });
 }
 
+
+  private async generateUniqueUsername(email: string): Promise<string> {
+    const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "_").slice(0, 16);
+    let candidate = base;
+    let suffix = 1;
+    while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+      candidate = `${base}${suffix++}`;
+    }
+    return candidate;
+  }
 
   private async issueTokens(userId: string, email: string) {
     const accessToken = this.jwtService.sign({ sub: userId, email });

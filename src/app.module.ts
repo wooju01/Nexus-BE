@@ -23,6 +23,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
 import { TaskCommentModule } from './modules/task-comment/task-comment.module';
+import { FriendModule } from './modules/friend/friend.module';
 /**
  * 루트 모듈.
  *
@@ -52,6 +53,7 @@ import { TaskCommentModule } from './modules/task-comment/task-comment.module';
     ProjectModule,
     TaskModule,
     TaskCommentModule,
+    FriendModule,
   ],
   controllers: [AppController],
   providers: [
