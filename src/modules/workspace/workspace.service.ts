@@ -68,7 +68,12 @@ async getUnreadSummary(userId: string, workspaceId: string) {
   const channelMembers = await this.prisma.channelMember.findMany({
     where: {
       userId,
-      channel: { workspaceId },
+      channel: {
+        OR: [
+          { workspaceId },
+          { workspaceId: null }, // 글로벌 DM 포함
+        ],
+      },
     },
     select: {
       channelId: true,
