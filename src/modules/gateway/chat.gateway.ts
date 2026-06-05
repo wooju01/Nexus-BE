@@ -50,6 +50,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (this.userSockets.get(payload.sub)!.size === 1) {
         await this.setPresence(payload.sub, PresenceStatus.ONLINE);
       }
+
+      // DM 채널 룸 자동 join — FE가 channel.join을 emit하기 전에도 알림 수신 가능
+      const dmChannels = await this.prisma.channelMember.findMany({
+        where: {
+          userId: payload.sub,
+          channel: { type: { in: ["DM", "GROUP_DM"] } },
+        },
+        select: { channelId: true },
+      });
+      for (const { channelId } of dmChannels) {
+        await client.join(`channel:${channelId}`);
+      }
     } catch {
       client.disconnect();
     }

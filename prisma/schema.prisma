@@ -214,7 +214,7 @@ model Invitation {
 // 채널 (일반 채널 + DM + 그룹 DM 모두 여기)
 model Channel {
   id          String      @id @default(cuid())
-  workspaceId String
+  workspaceId String? // DM/GROUP_DM은 null (글로벌)
   type        ChannelType @default(CHANNEL)
   name        String? // DM은 null
   topic       String?
@@ -222,8 +222,8 @@ model Channel {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  linkedProject  Project?        // 프로젝트 전용 채널인 경우 역참조
+  workspace      Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedProject  Project?        
   members        ChannelMember[]
   messages       Message[]
   readMarkers    ReadMarker[]
@@ -252,7 +252,7 @@ model Message {
   channelId String
   authorId  String
   content   Json // Tiptap JSON
-  parentId  String? // 스레드 답글이면 원본 메시지 ID
+  parentId  String?
   editedAt  DateTime?
   deletedAt DateTime? // soft delete
   createdAt DateTime  @default(now())
@@ -287,7 +287,7 @@ model MessageAttachment {
   @@index([messageId])
 }
 
-// 메시지 이모지 리액션 (👍, ❤️, 😂 등)
+// 메시지 이모지 리액션 
 model MessageReaction {
   id        String   @id @default(cuid())
   messageId String
@@ -363,7 +363,7 @@ model Column {
   projectId String
   name      String
   color     String?
-  order     Int // 보드 내 순서
+  order     Int
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

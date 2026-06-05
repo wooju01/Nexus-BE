@@ -113,10 +113,9 @@ export class MessageService {
     if (!message) throw new NotFoundException("메시지를 찾을 수 없습니다.");
 
     const isAuthor = message.authorId === userId;
-    const isPrivileged = await this.isWorkspaceAdminOrOwner(
-      userId,
-      message.channel.workspaceId,
-    );
+    const isPrivileged = message.channel.workspaceId
+      ? await this.isWorkspaceAdminOrOwner(userId, message.channel.workspaceId)
+      : false; // DM 채널은 워크스페이스 권한 없음 — 작성자만 삭제 가능
 
     if (!isAuthor && !isPrivileged) throw new ForbiddenException();
 
