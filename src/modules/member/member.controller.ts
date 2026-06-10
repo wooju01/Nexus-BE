@@ -40,7 +40,12 @@ export class MemberController {
     @Body() dto: UpdateMemberRoleDto,
   ) {
     const { userId } = req.user as { userId: string };
-    return this.memberService.updateMemberRole(userId, workspaceId, targetUserId, dto);
+    return this.memberService.updateMemberRole(
+      userId,
+      workspaceId,
+      targetUserId,
+      dto,
+    );
   }
 
   @Delete(":targetUserId")

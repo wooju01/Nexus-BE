@@ -2,12 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { PrismaService } from '../../prisma/prisma.service';
-import { ChatGateway } from '../gateway/chat.gateway';
-import type { CreateCommentDto } from './dto/create-comment.dto';
-import type { UpdateCommentDto } from './dto/update-comment.dto';
+import { PrismaService } from "../../prisma/prisma.service";
+import { ChatGateway } from "../gateway/chat.gateway";
+import type { CreateCommentDto } from "./dto/create-comment.dto";
+import type { UpdateCommentDto } from "./dto/update-comment.dto";
 
 @Injectable()
 export class TaskCommentService {
@@ -23,7 +23,7 @@ export class TaskCommentService {
     return this.prisma.taskComment.findMany({
       where: { taskId: task.id },
       include: { author: { select: { id: true, name: true, avatar: true } } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 
@@ -40,7 +40,7 @@ export class TaskCommentService {
       include: { author: { select: { id: true, name: true, avatar: true } } },
     });
 
-    this.gateway.broadcastToProject('comment.created', task.projectId, {
+    this.gateway.broadcastToProject("comment.created", task.projectId, {
       comment,
       actorUserId: userId,
     });
@@ -52,13 +52,15 @@ export class TaskCommentService {
   async update(commentId: string, userId: string, dto: UpdateCommentDto) {
     const existing = await this.prisma.taskComment.findUnique({
       where: { id: commentId },
-      include: { task: { select: { id: true, projectId: true, deletedAt: true } } },
+      include: {
+        task: { select: { id: true, projectId: true, deletedAt: true } },
+      },
     });
     if (!existing || existing.task.deletedAt) {
-      throw new NotFoundException('코멘트를 찾을 수 없습니다.');
+      throw new NotFoundException("코멘트를 찾을 수 없습니다.");
     }
     if (existing.authorId !== userId) {
-      throw new ForbiddenException('자신의 코멘트만 수정할 수 있습니다.');
+      throw new ForbiddenException("자신의 코멘트만 수정할 수 있습니다.");
     }
     await this.requireMembership(existing.task.projectId, userId);
 
@@ -68,10 +70,14 @@ export class TaskCommentService {
       include: { author: { select: { id: true, name: true, avatar: true } } },
     });
 
-    this.gateway.broadcastToProject('comment.updated', existing.task.projectId, {
-      comment: updated,
-      actorUserId: userId,
-    });
+    this.gateway.broadcastToProject(
+      "comment.updated",
+      existing.task.projectId,
+      {
+        comment: updated,
+        actorUserId: userId,
+      },
+    );
 
     return updated;
   }
@@ -80,23 +86,29 @@ export class TaskCommentService {
   async remove(commentId: string, userId: string) {
     const existing = await this.prisma.taskComment.findUnique({
       where: { id: commentId },
-      include: { task: { select: { id: true, projectId: true, deletedAt: true } } },
+      include: {
+        task: { select: { id: true, projectId: true, deletedAt: true } },
+      },
     });
     if (!existing || existing.task.deletedAt) {
-      throw new NotFoundException('코멘트를 찾을 수 없습니다.');
+      throw new NotFoundException("코멘트를 찾을 수 없습니다.");
     }
     if (existing.authorId !== userId) {
-      throw new ForbiddenException('자신의 코멘트만 삭제할 수 있습니다.');
+      throw new ForbiddenException("자신의 코멘트만 삭제할 수 있습니다.");
     }
     await this.requireMembership(existing.task.projectId, userId);
 
     await this.prisma.taskComment.delete({ where: { id: commentId } });
 
-    this.gateway.broadcastToProject('comment.deleted', existing.task.projectId, {
-      commentId,
-      taskId: existing.task.id,
-      actorUserId: userId,
-    });
+    this.gateway.broadcastToProject(
+      "comment.deleted",
+      existing.task.projectId,
+      {
+        commentId,
+        taskId: existing.task.id,
+        actorUserId: userId,
+      },
+    );
   }
 
   // ── 내부 헬퍼 ────────────────────────────────────────────────────────
@@ -107,7 +119,7 @@ export class TaskCommentService {
       where: { id: taskId, deletedAt: null },
       select: { id: true, projectId: true },
     });
-    if (!task) throw new NotFoundException('태스크를 찾을 수 없습니다.');
+    if (!task) throw new NotFoundException("태스크를 찾을 수 없습니다.");
     await this.requireMembership(task.projectId, userId);
     return task;
   }
@@ -117,11 +129,13 @@ export class TaskCommentService {
       where: { id: projectId },
       select: { workspaceId: true },
     });
-    if (!project) throw new NotFoundException('프로젝트를 찾을 수 없습니다.');
+    if (!project) throw new NotFoundException("프로젝트를 찾을 수 없습니다.");
 
     const membership = await this.prisma.membership.findUnique({
-      where: { userId_workspaceId: { userId, workspaceId: project.workspaceId } },
+      where: {
+        userId_workspaceId: { userId, workspaceId: project.workspaceId },
+      },
     });
-    if (!membership) throw new ForbiddenException('접근 권한이 없습니다.');
+    if (!membership) throw new ForbiddenException("접근 권한이 없습니다.");
   }
 }

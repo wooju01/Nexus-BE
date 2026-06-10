@@ -22,10 +22,7 @@ export class WorkspaceProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Get()
-  getProjects(
-    @Req() req: Request,
-    @Param("workspaceId") workspaceId: string,
-  ) {
+  getProjects(@Req() req: Request, @Param("workspaceId") workspaceId: string) {
     const { userId } = req.user as { userId: string };
     return this.projectService.getProjects(userId, workspaceId);
   }

@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { ChatGateway } from '../gateway/chat.gateway';
-import type { CreateTaskDto } from './dto/create-task.dto';
-import type { UpdateTaskDto } from './dto/update-task.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { ChatGateway } from "../gateway/chat.gateway";
+import type { CreateTaskDto } from "./dto/create-task.dto";
+import type { UpdateTaskDto } from "./dto/update-task.dto";
 
 @Injectable()
 export class TaskService {
@@ -17,12 +21,14 @@ export class TaskService {
     return this.prisma.task.findMany({
       where: { projectId, deletedAt: null },
       include: {
-        assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, avatar: true } } },
+        },
         labels: { include: { label: true } },
         creator: { select: { id: true, name: true, avatar: true } },
         _count: { select: { comments: true, subTasks: true } },
       },
-      orderBy: [{ status: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ status: "asc" }, { order: "asc" }, { createdAt: "asc" }],
     });
   }
 
@@ -49,11 +55,20 @@ export class TaskService {
           columnId: dto.columnId,
           parentTaskId: dto.parentTaskId,
           assignees: dto.assigneeIds?.length
-            ? { create: dto.assigneeIds.map((uid) => ({ userId: uid, assignedBy: userId })) }
+            ? {
+                create: dto.assigneeIds.map((uid) => ({
+                  userId: uid,
+                  assignedBy: userId,
+                })),
+              }
             : undefined,
         },
         include: {
-          assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+          assignees: {
+            include: {
+              user: { select: { id: true, name: true, avatar: true } },
+            },
+          },
           labels: { include: { label: true } },
           creator: { select: { id: true, name: true, avatar: true } },
         },
@@ -62,7 +77,10 @@ export class TaskService {
 
     // 같은 프로젝트 보드를 보는 모든 클라이언트에게 알림.
     // FE 는 actorUserId 로 자기 자신이 일으킨 변경을 echo 무시 가능.
-    this.gateway.broadcastToProject('task.created', projectId, { task, actorUserId: userId });
+    this.gateway.broadcastToProject("task.created", projectId, {
+      task,
+      actorUserId: userId,
+    });
 
     return task;
   }
@@ -71,29 +89,41 @@ export class TaskService {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, deletedAt: null },
       include: {
-        assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, avatar: true } } },
+        },
         labels: { include: { label: true } },
         creator: { select: { id: true, name: true, avatar: true } },
         comments: {
           where: { task: { deletedAt: null } },
-          include: { author: { select: { id: true, name: true, avatar: true } } },
-          orderBy: { createdAt: 'asc' },
+          include: {
+            author: { select: { id: true, name: true, avatar: true } },
+          },
+          orderBy: { createdAt: "asc" },
         },
         subTasks: {
           where: { deletedAt: null },
-          select: { id: true, number: true, title: true, status: true, priority: true },
+          select: {
+            id: true,
+            number: true,
+            title: true,
+            status: true,
+            priority: true,
+          },
         },
       },
     });
 
-    if (!task) throw new NotFoundException('태스크를 찾을 수 없습니다.');
+    if (!task) throw new NotFoundException("태스크를 찾을 수 없습니다.");
     await this.requireMembership(task.projectId, userId);
     return task;
   }
 
   async updateTask(taskId: string, userId: string, dto: UpdateTaskDto) {
-    const task = await this.prisma.task.findFirst({ where: { id: taskId, deletedAt: null } });
-    if (!task) throw new NotFoundException('태스크를 찾을 수 없습니다.');
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, deletedAt: null },
+    });
+    if (!task) throw new NotFoundException("태스크를 찾을 수 없습니다.");
     await this.requireMembership(task.projectId, userId);
 
     const { assigneeIds, labelIds, columnId, dueDate, ...rest } = dto;
@@ -119,7 +149,10 @@ export class TaskService {
         assignees: assigneeIds
           ? {
               deleteMany: {},
-              create: assigneeIds.map((uid) => ({ userId: uid, assignedBy: userId })),
+              create: assigneeIds.map((uid) => ({
+                userId: uid,
+                assignedBy: userId,
+              })),
             }
           : undefined,
         // 라벨 동기화: 빈 배열이면 모두 제거.
@@ -131,20 +164,27 @@ export class TaskService {
           : undefined,
       } as any,
       include: {
-        assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, avatar: true } } },
+        },
         labels: { include: { label: true } },
         creator: { select: { id: true, name: true, avatar: true } },
       },
     });
 
-    this.gateway.broadcastToProject('task.updated', task.projectId, { task: updated, actorUserId: userId });
+    this.gateway.broadcastToProject("task.updated", task.projectId, {
+      task: updated,
+      actorUserId: userId,
+    });
 
     return updated;
   }
 
   async deleteTask(taskId: string, userId: string) {
-    const task = await this.prisma.task.findFirst({ where: { id: taskId, deletedAt: null } });
-    if (!task) throw new NotFoundException('태스크를 찾을 수 없습니다.');
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, deletedAt: null },
+    });
+    if (!task) throw new NotFoundException("태스크를 찾을 수 없습니다.");
     await this.requireMembership(task.projectId, userId);
 
     await this.prisma.task.update({
@@ -152,7 +192,10 @@ export class TaskService {
       data: { deletedAt: new Date() },
     });
 
-    this.gateway.broadcastToProject('task.deleted', task.projectId, { taskId, actorUserId: userId });
+    this.gateway.broadcastToProject("task.deleted", task.projectId, {
+      taskId,
+      actorUserId: userId,
+    });
   }
 
   private async requireMembership(projectId: string, userId: string) {
@@ -160,11 +203,13 @@ export class TaskService {
       where: { id: projectId },
       select: { workspaceId: true },
     });
-    if (!project) throw new NotFoundException('프로젝트를 찾을 수 없습니다.');
+    if (!project) throw new NotFoundException("프로젝트를 찾을 수 없습니다.");
 
     const membership = await this.prisma.membership.findUnique({
-      where: { userId_workspaceId: { userId, workspaceId: project.workspaceId } },
+      where: {
+        userId_workspaceId: { userId, workspaceId: project.workspaceId },
+      },
     });
-    if (!membership) throw new ForbiddenException('접근 권한이 없습니다.');
+    if (!membership) throw new ForbiddenException("접근 권한이 없습니다.");
   }
 }

@@ -73,7 +73,8 @@ export class ChannelService {
     dto: UpdateChannelDto,
   ) {
     const channel = await this.findChannelOrThrow(channelId);
-    if (!channel.workspaceId) throw new ForbiddenException("DM 채널은 수정할 수 없습니다.");
+    if (!channel.workspaceId)
+      throw new ForbiddenException("DM 채널은 수정할 수 없습니다.");
     await this.requireWorkspaceAdminOrOwner(userId, channel.workspaceId);
     return this.prisma.channel.update({
       where: { id: channelId },
@@ -84,7 +85,8 @@ export class ChannelService {
   // DELETE /channels/:channelId
   async deleteChannel(userId: string, channelId: string) {
     const channel = await this.findChannelOrThrow(channelId);
-    if (!channel.workspaceId) throw new ForbiddenException("DM 채널은 삭제할 수 없습니다.");
+    if (!channel.workspaceId)
+      throw new ForbiddenException("DM 채널은 삭제할 수 없습니다.");
     await this.requireWorkspaceAdminOrOwner(userId, channel.workspaceId);
     await this.prisma.channel.delete({ where: { id: channelId } });
   }

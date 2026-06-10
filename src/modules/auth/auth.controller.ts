@@ -19,8 +19,7 @@ import { RefreshDto } from "./dto/refresh.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdatePresenceDto } from "./dto/update-presence.dto";
 import { Public } from "../../common/decorators/public.decorator";
-import { ChangePasswordDto } from './dto/change-password.dto';
-
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("auth")
 export class AuthController {

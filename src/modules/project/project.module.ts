@@ -1,5 +1,8 @@
 import { Module } from "@nestjs/common";
-import { WorkspaceProjectController, ProjectController } from "./project.controller";
+import {
+  WorkspaceProjectController,
+  ProjectController,
+} from "./project.controller";
 import { ProjectService } from "./project.service";
 
 @Module({
