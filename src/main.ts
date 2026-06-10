@@ -21,9 +21,9 @@ async function bootstrap() {
 
   // app.setGlobalPrefix("v1");
 
-  const allowedOrigins = (
-    process.env.CORS_ORIGIN ?? "http://localhost:3001"
-  ).split(",").map((o) => o.trim());
+  const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:3001")
+    .split(",")
+    .map((o) => o.trim());
 
   app.enableCors({
     origin: (origin, callback) => {

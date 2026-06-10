@@ -44,7 +44,9 @@ export class LabelService {
 
     if (dto.name) {
       const existing = await this.prisma.label.findUnique({
-        where: { workspaceId_name: { workspaceId: label.workspaceId, name: dto.name } },
+        where: {
+          workspaceId_name: { workspaceId: label.workspaceId, name: dto.name },
+        },
       });
       if (existing && existing.id !== labelId) {
         throw new ConflictException("이미 존재하는 라벨 이름입니다.");
@@ -64,9 +66,11 @@ export class LabelService {
     await this.prisma.label.delete({ where: { id: labelId } });
   }
 
-// Helper methods
+  // Helper methods
   private async findLabelOrThrow(labelId: string) {
-    const label = await this.prisma.label.findUnique({ where: { id: labelId } });
+    const label = await this.prisma.label.findUnique({
+      where: { id: labelId },
+    });
     if (!label) throw new NotFoundException("라벨을 찾을 수 없습니다.");
     return label;
   }

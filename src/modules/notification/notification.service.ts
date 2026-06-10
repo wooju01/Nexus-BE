@@ -1,6 +1,13 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import type { ListNotificationsDto, UpdateNotificationSettingsDto } from './dto/notification.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import type {
+  ListNotificationsDto,
+  UpdateNotificationSettingsDto,
+} from "./dto/notification.dto";
 
 @Injectable()
 export class NotificationService {
@@ -15,13 +22,15 @@ export class NotificationService {
         ...(unread !== undefined ? { isRead: !unread } : {}),
         ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: limit + 1,
     });
 
     const hasMore = notifications.length > limit;
     const items = hasMore ? notifications.slice(0, limit) : notifications;
-    const nextCursor = hasMore ? items[items.length - 1].createdAt.toISOString() : null;
+    const nextCursor = hasMore
+      ? items[items.length - 1].createdAt.toISOString()
+      : null;
 
     return { items, nextCursor };
   }

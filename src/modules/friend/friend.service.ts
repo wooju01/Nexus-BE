@@ -27,8 +27,12 @@ export class FriendService {
       where: { username: dto.username },
       select: USER_SELECT,
     });
-    if (!receiver) throw new NotFoundException("해당 username의 유저를 찾을 수 없습니다.");
-    if (receiver.id === senderId) throw new BadRequestException("자기 자신에게 친구 요청을 보낼 수 없습니다.");
+    if (!receiver)
+      throw new NotFoundException("해당 username의 유저를 찾을 수 없습니다.");
+    if (receiver.id === senderId)
+      throw new BadRequestException(
+        "자기 자신에게 친구 요청을 보낼 수 없습니다.",
+      );
 
     // 이미 요청이 존재하는지 확인 (양방향)
     const existing = await this.prisma.friendRequest.findFirst({
@@ -41,9 +45,14 @@ export class FriendService {
     });
 
     if (existing) {
-      if (existing.status === FriendStatus.ACCEPTED) throw new ConflictException("이미 친구입니다.");
-      if (existing.status === FriendStatus.PENDING) throw new ConflictException("이미 친구 요청을 보냈거나 받은 상태입니다.");
-      if (existing.status === FriendStatus.BLOCKED) throw new ForbiddenException("차단된 유저입니다.");
+      if (existing.status === FriendStatus.ACCEPTED)
+        throw new ConflictException("이미 친구입니다.");
+      if (existing.status === FriendStatus.PENDING)
+        throw new ConflictException(
+          "이미 친구 요청을 보냈거나 받은 상태입니다.",
+        );
+      if (existing.status === FriendStatus.BLOCKED)
+        throw new ForbiddenException("차단된 유저입니다.");
     }
 
     return this.prisma.friendRequest.create({
@@ -92,7 +101,8 @@ export class FriendService {
     });
     if (!request) throw new NotFoundException("친구 요청을 찾을 수 없습니다.");
     if (request.receiverId !== userId) throw new ForbiddenException();
-    if (request.status !== FriendStatus.PENDING) throw new ConflictException("이미 처리된 요청입니다.");
+    if (request.status !== FriendStatus.PENDING)
+      throw new ConflictException("이미 처리된 요청입니다.");
 
     return this.prisma.friendRequest.update({
       where: { id: requestId },
@@ -112,7 +122,8 @@ export class FriendService {
     });
     if (!request) throw new NotFoundException("친구 요청을 찾을 수 없습니다.");
     if (request.receiverId !== userId) throw new ForbiddenException();
-    if (request.status !== FriendStatus.PENDING) throw new ConflictException("이미 처리된 요청입니다.");
+    if (request.status !== FriendStatus.PENDING)
+      throw new ConflictException("이미 처리된 요청입니다.");
 
     await this.prisma.friendRequest.update({
       where: { id: requestId },

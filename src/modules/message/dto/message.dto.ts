@@ -1,6 +1,15 @@
+export type AttachmentDto = {
+  url: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  thumbnailUrl?: string;
+};
+
 export type SendMessageDto = {
   content: object; // Tiptap JSON
   parentId?: string;
+  attachments?: AttachmentDto[];
 };
 
 export type UpdateMessageDto = {
@@ -16,6 +25,6 @@ export type ReadMarkerDto = {
 };
 
 export type MessageQueryDto = {
-  cursor?: string; 
+  cursor?: string;
   limit?: number;
 };

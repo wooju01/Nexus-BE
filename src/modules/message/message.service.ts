@@ -12,6 +12,7 @@ import type {
   AddReactionDto,
   ReadMarkerDto,
   MessageQueryDto,
+  AttachmentDto,
 } from "./dto/message.dto";
 
 const DEFAULT_LIMIT = 50;
@@ -40,6 +41,16 @@ export class MessageService {
       },
       include: {
         author: { select: { id: true, name: true, avatar: true } },
+        attachments: {
+          select: {
+            id: true,
+            fileUrl: true,
+            fileName: true,
+            mimeType: true,
+            fileSize: true,
+            thumbnailUrl: true,
+          },
+        },
         reactions: {
           select: { emoji: true, userId: true },
         },
@@ -73,16 +84,46 @@ export class MessageService {
       }
     }
 
-    return this.prisma.message.create({
-      data: {
-        channelId,
-        authorId: userId,
-        content: dto.content,
-        parentId: dto.parentId ?? null,
-      },
-      include: {
-        author: { select: { id: true, name: true, avatar: true } },
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const message = await tx.message.create({
+        data: {
+          channelId,
+          authorId: userId,
+          content: dto.content,
+          parentId: dto.parentId ?? null,
+        },
+      });
+
+      if (dto.attachments?.length) {
+        await tx.messageAttachment.createMany({
+          data: dto.attachments.map((att: AttachmentDto) => ({
+            messageId: message.id,
+            uploaderId: userId,
+            fileName: att.fileName,
+            fileUrl: att.url,
+            fileSize: att.fileSize,
+            mimeType: att.mimeType,
+            thumbnailUrl: att.thumbnailUrl ?? null,
+          })),
+        });
+      }
+
+      return tx.message.findUniqueOrThrow({
+        where: { id: message.id },
+        include: {
+          author: { select: { id: true, name: true, avatar: true } },
+          attachments: {
+            select: {
+              id: true,
+              fileUrl: true,
+              fileName: true,
+              mimeType: true,
+              fileSize: true,
+              thumbnailUrl: true,
+            },
+          },
+        },
+      });
     });
   }
 
@@ -113,10 +154,9 @@ export class MessageService {
     if (!message) throw new NotFoundException("메시지를 찾을 수 없습니다.");
 
     const isAuthor = message.authorId === userId;
-    const isPrivileged = await this.isWorkspaceAdminOrOwner(
-      userId,
-      message.channel.workspaceId,
-    );
+    const isPrivileged = message.channel.workspaceId
+      ? await this.isWorkspaceAdminOrOwner(userId, message.channel.workspaceId)
+      : false; // DM 채널은 워크스페이스 권한 없음 — 작성자만 삭제 가능
 
     if (!isAuthor && !isPrivileged) throw new ForbiddenException();
 

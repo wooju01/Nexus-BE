@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-kakao';
+import { Injectable } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { Strategy } from "passport-kakao";
 
 @Injectable()
-export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
+export class KakaoStrategy extends PassportStrategy(Strategy, "kakao") {
   constructor() {
     super({
       clientID: process.env.KAKAO_CLIENT_ID!,
@@ -22,7 +22,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     const email = _json?.kakao_account?.email;
 
     done(null, {
-      provider: 'kakao',
+      provider: "kakao",
       providerAccountId: String(id),
       email: email ?? `kakao_${id}@nexus.local`,
       name: displayName,
