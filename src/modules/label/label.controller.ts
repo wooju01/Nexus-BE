@@ -1,4 +1,13 @@
-import { Controller, Patch, Delete, Param, Body, Req, HttpCode, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from "@nestjs/common";
 import type { Request } from "express";
 import { LabelService } from "./label.service";
 import type { UpdateLabelDto } from "./dto/label.dto";

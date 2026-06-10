@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUrl, Matches } from 'class-validator';
+import { IsString, IsOptional, IsUrl, Matches } from "class-validator";
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -7,7 +7,8 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @Matches(/^[a-z0-9._]{3,20}$/, {
-    message: 'username은 소문자·숫자·점·언더스코어만 사용 가능하며 3~20자여야 합니다.',
+    message:
+      "username은 소문자·숫자·점·언더스코어만 사용 가능하며 3~20자여야 합니다.",
   })
   username?: string;
 

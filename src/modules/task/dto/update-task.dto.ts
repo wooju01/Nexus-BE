@@ -6,8 +6,8 @@ import {
   IsArray,
   IsInt,
   ValidateIf,
-} from 'class-validator';
-import { Priority, TaskStatus } from '@prisma/client';
+} from "class-validator";
+import { Priority, TaskStatus } from "@prisma/client";
 
 export class UpdateTaskDto {
   @IsOptional()

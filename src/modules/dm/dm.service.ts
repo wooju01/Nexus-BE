@@ -23,7 +23,9 @@ export class DmService {
         members: {
           where: { userId: { not: userId } },
           include: {
-            user: { select: { id: true, name: true, avatar: true, status: true } },
+            user: {
+              select: { id: true, name: true, avatar: true, status: true },
+            },
           },
         },
       },

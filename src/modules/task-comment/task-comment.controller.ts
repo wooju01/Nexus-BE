@@ -7,12 +7,12 @@ import {
   Patch,
   Post,
   Req,
-} from '@nestjs/common';
-import type { Request } from 'express';
+} from "@nestjs/common";
+import type { Request } from "express";
 
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
-import { TaskCommentService } from './task-comment.service';
+import { CreateCommentDto } from "./dto/create-comment.dto";
+import { UpdateCommentDto } from "./dto/update-comment.dto";
+import { TaskCommentService } from "./task-comment.service";
 
 /**
  * 코멘트 라우트는 두 가지 prefix 를 섞어 사용한다:
@@ -26,34 +26,34 @@ import { TaskCommentService } from './task-comment.service';
 export class TaskCommentController {
   constructor(private readonly service: TaskCommentService) {}
 
-  @Get('tasks/:taskId/comments')
-  list(@Req() req: Request, @Param('taskId') taskId: string) {
+  @Get("tasks/:taskId/comments")
+  list(@Req() req: Request, @Param("taskId") taskId: string) {
     const { userId } = req.user as { userId: string };
     return this.service.listByTask(taskId, userId);
   }
 
-  @Post('tasks/:taskId/comments')
+  @Post("tasks/:taskId/comments")
   create(
     @Req() req: Request,
-    @Param('taskId') taskId: string,
+    @Param("taskId") taskId: string,
     @Body() dto: CreateCommentDto,
   ) {
     const { userId } = req.user as { userId: string };
     return this.service.create(taskId, userId, dto);
   }
 
-  @Patch('comments/:id')
+  @Patch("comments/:id")
   update(
     @Req() req: Request,
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() dto: UpdateCommentDto,
   ) {
     const { userId } = req.user as { userId: string };
     return this.service.update(id, userId, dto);
   }
 
-  @Delete('comments/:id')
-  remove(@Req() req: Request, @Param('id') id: string) {
+  @Delete("comments/:id")
+  remove(@Req() req: Request, @Param("id") id: string) {
     const { userId } = req.user as { userId: string };
     return this.service.remove(id, userId);
   }

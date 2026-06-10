@@ -17,13 +17,14 @@ import { GatewayModule } from "./modules/gateway/gateway.module";
 import { DmModule } from "./modules/dm/dm.module";
 import { InvitationModule } from "./modules/invitation/invitation.module";
 import { MailModule } from "./modules/mail/mail.module";
-import { LabelModule } from './modules/label/label.module';
-import { NotificationModule } from './modules/notification/notification.module';
-import { ActivityModule } from './modules/activity/activity.module';
-import { ProjectModule } from './modules/project/project.module';
-import { TaskModule } from './modules/task/task.module';
-import { TaskCommentModule } from './modules/task-comment/task-comment.module';
-import { FriendModule } from './modules/friend/friend.module';
+import { LabelModule } from "./modules/label/label.module";
+import { NotificationModule } from "./modules/notification/notification.module";
+import { ActivityModule } from "./modules/activity/activity.module";
+import { ProjectModule } from "./modules/project/project.module";
+import { TaskModule } from "./modules/task/task.module";
+import { TaskCommentModule } from "./modules/task-comment/task-comment.module";
+import { FriendModule } from "./modules/friend/friend.module";
+import { UploadModule } from "./modules/upload/upload.module";
 /**
  * 루트 모듈.
  *
@@ -54,6 +55,7 @@ import { FriendModule } from './modules/friend/friend.module';
     TaskModule,
     TaskCommentModule,
     FriendModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

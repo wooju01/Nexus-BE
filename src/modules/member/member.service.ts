@@ -131,7 +131,8 @@ export class MemberService {
     const membership = await this.prisma.membership.findUnique({
       where: { userId_workspaceId: { userId, workspaceId } },
     });
-    if (!membership) throw new NotFoundException("해당 멤버를 찾을 수 없습니다.");
+    if (!membership)
+      throw new NotFoundException("해당 멤버를 찾을 수 없습니다.");
     return membership;
   }
 }

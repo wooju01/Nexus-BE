@@ -10,11 +10,10 @@ import * as crypto from "crypto";
 import { PrismaService } from "../../prisma/prisma.service";
 import { SignupDto } from "./dto/signup.dto";
 import { LoginDto } from "./dto/login.dto";
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UpdatePresenceDto } from './dto/update-presence.dto';
-import { PresenceStatus } from '@prisma/client';
-import { ChangePasswordDto } from './dto/change-password.dto';
-
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { UpdatePresenceDto } from "./dto/update-presence.dto";
+import { PresenceStatus } from "@prisma/client";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
@@ -34,11 +33,17 @@ export class AuthService {
     const usernameTaken = await this.prisma.user.findUnique({
       where: { username: dto.username },
     });
-    if (usernameTaken) throw new ConflictException("이미 사용 중인 username입니다.");
+    if (usernameTaken)
+      throw new ConflictException("이미 사용 중인 username입니다.");
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
-      data: { email: dto.email, name: dto.name, username: dto.username, password: hashedPassword },
+      data: {
+        email: dto.email,
+        name: dto.name,
+        username: dto.username,
+        password: hashedPassword,
+      },
     });
 
     return this.issueTokens(user.id, user.email);
@@ -144,7 +149,8 @@ export class AuthService {
         where: { username: dto.username },
         select: { id: true },
       });
-      if (taken && taken.id !== userId) throw new ConflictException("이미 사용 중인 username입니다.");
+      if (taken && taken.id !== userId)
+        throw new ConflictException("이미 사용 중인 username입니다.");
     }
 
     return this.prisma.user.update({
@@ -171,31 +177,38 @@ export class AuthService {
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
-  const user = await this.prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-  });
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
 
-  // OAuth 전용 계정은 비밀번호 없음
-  if (!user.password)
-    throw new BadRequestException('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+    // OAuth 전용 계정은 비밀번호 없음
+    if (!user.password)
+      throw new BadRequestException(
+        "소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.",
+      );
 
-  const isValid = await bcrypt.compare(dto.currentPassword, user.password);
-  if (!isValid)
-    throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
+    const isValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isValid)
+      throw new UnauthorizedException("현재 비밀번호가 올바르지 않습니다.");
 
-  const hashed = await bcrypt.hash(dto.newPassword, 10);
-  await this.prisma.user.update({
-    where: { id: userId },
-    data: { password: hashed },
-  });
-}
-
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed },
+    });
+  }
 
   private async generateUniqueUsername(email: string): Promise<string> {
-    const base = email.split("@")[0].toLowerCase().replace(/[^a-z0-9._]/g, "_").slice(0, 16);
+    const base = email
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9._]/g, "_")
+      .slice(0, 16);
     let candidate = base;
     let suffix = 1;
-    while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+    while (
+      await this.prisma.user.findUnique({ where: { username: candidate } })
+    ) {
       candidate = `${base}${suffix++}`;
     }
     return candidate;

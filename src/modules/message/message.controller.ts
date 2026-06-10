@@ -1,11 +1,23 @@
 import {
-  Controller, Get, Post, Patch, Delete,
-  Param, Body, Req, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import type { Request } from "express";
 import { MessageService } from "./message.service";
 import { ChatGateway } from "../gateway/chat.gateway";
-import type { UpdateMessageDto, AddReactionDto, SendMessageDto } from "./dto/message.dto";
+import type {
+  UpdateMessageDto,
+  AddReactionDto,
+  SendMessageDto,
+} from "./dto/message.dto";
 
 @Controller("messages")
 export class MessageController {
@@ -21,17 +33,33 @@ export class MessageController {
     @Body() dto: UpdateMessageDto,
   ) {
     const { userId } = req.user as { userId: string };
-    const message = await this.messageService.updateMessage(userId, messageId, dto);
-    this.gateway.broadcastToChannel("message.updated", message.channelId, message);
+    const message = await this.messageService.updateMessage(
+      userId,
+      messageId,
+      dto,
+    );
+    this.gateway.broadcastToChannel(
+      "message.updated",
+      message.channelId,
+      message,
+    );
     return message;
   }
 
   @Delete(":messageId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteMessage(@Req() req: Request, @Param("messageId") messageId: string) {
+  async deleteMessage(
+    @Req() req: Request,
+    @Param("messageId") messageId: string,
+  ) {
     const { userId } = req.user as { userId: string };
-    const { channelId } = await this.messageService.deleteMessage(userId, messageId);
-    this.gateway.broadcastToChannel("message.deleted", channelId, { messageId });
+    const { channelId } = await this.messageService.deleteMessage(
+      userId,
+      messageId,
+    );
+    this.gateway.broadcastToChannel("message.deleted", channelId, {
+      messageId,
+    });
   }
 
   @Get(":messageId/replies")
@@ -60,7 +88,11 @@ export class MessageController {
     @Body() dto: AddReactionDto,
   ) {
     const { userId } = req.user as { userId: string };
-    const { channelId } = await this.messageService.addReaction(userId, messageId, dto);
+    const { channelId } = await this.messageService.addReaction(
+      userId,
+      messageId,
+      dto,
+    );
     this.gateway.broadcastToChannel("reaction.added", channelId, {
       messageId,
       userId,
@@ -76,7 +108,11 @@ export class MessageController {
     @Param("emoji") emoji: string,
   ) {
     const { userId } = req.user as { userId: string };
-    const { channelId } = await this.messageService.removeReaction(userId, messageId, emoji);
+    const { channelId } = await this.messageService.removeReaction(
+      userId,
+      messageId,
+      emoji,
+    );
     this.gateway.broadcastToChannel("reaction.removed", channelId, {
       messageId,
       userId,

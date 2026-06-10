@@ -58,7 +58,10 @@ export class FriendController {
 
   @Delete(":userId")
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removeFriend(@Req() req: Request, @Param("userId") friendUserId: string) {
+  async removeFriend(
+    @Req() req: Request,
+    @Param("userId") friendUserId: string,
+  ) {
     const user = req.user as { userId: string };
     return this.friendService.removeFriend(user.userId, friendUserId);
   }
