@@ -131,6 +131,20 @@ export class FriendService {
     });
   }
 
+  // DELETE /friends/requests/:id — 내가 보낸 요청 취소
+  async cancelRequest(userId: string, requestId: string) {
+    const request = await this.prisma.friendRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request) throw new NotFoundException("친구 요청을 찾을 수 없습니다.");
+    if (request.senderId !== userId) throw new ForbiddenException();
+    if (request.status !== FriendStatus.PENDING)
+      throw new ConflictException("이미 처리된 요청입니다.");
+
+    // 다시 요청을 보낼 수 있도록 레코드를 삭제
+    await this.prisma.friendRequest.delete({ where: { id: requestId } });
+  }
+
   // GET /friends — 수락된 친구 목록
   async getFriends(userId: string) {
     const requests = await this.prisma.friendRequest.findMany({
