@@ -15,6 +15,27 @@ export class TaskService {
     private readonly gateway: ChatGateway,
   ) {}
 
+  // GET /tasks/my — 현재 유저가 담당자인 미완료 태스크 전체 (프로젝트 횡단)
+  async getMyTasks(userId: string) {
+    return this.prisma.task.findMany({
+      where: {
+        assignees: { some: { userId } },
+        deletedAt: null,
+        status: { not: "DONE" },
+      },
+      include: {
+        project: { select: { id: true, name: true } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, avatar: true } } },
+        },
+        labels: { include: { label: true } },
+        creator: { select: { id: true, name: true, avatar: true } },
+      },
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+      take: 30,
+    });
+  }
+
   async getTasks(projectId: string, userId: string) {
     await this.requireMembership(projectId, userId);
 

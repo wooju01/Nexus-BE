@@ -34,6 +34,12 @@ export class TaskController {
     return this.taskService.createTask(projectId, userId, dto);
   }
 
+  @Get("tasks/my")
+  getMyTasks(@Request() req) {
+    const { userId } = req.user as { userId: string };
+    return this.taskService.getMyTasks(userId);
+  }
+
   @Get("tasks/:id")
   getTask(@Param("id") id: string, @Request() req) {
     const { userId } = req.user as { userId: string };
