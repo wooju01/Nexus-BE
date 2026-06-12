@@ -136,6 +136,7 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        username: true,
         avatar: true,
         status: true,
         createdAt: true,
