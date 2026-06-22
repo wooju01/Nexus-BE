@@ -50,6 +50,13 @@ export class FriendController {
     return this.friendService.declineRequest(user.userId, id);
   }
 
+  @Delete("requests/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cancelRequest(@Req() req: Request, @Param("id") id: string) {
+    const user = req.user as { userId: string };
+    return this.friendService.cancelRequest(user.userId, id);
+  }
+
   @Get()
   async getFriends(@Req() req: Request) {
     const user = req.user as { userId: string };
