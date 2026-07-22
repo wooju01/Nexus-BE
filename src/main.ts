@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { ValidationPipe } from "@nestjs/common";
 
 import { AppModule } from "./app.module";
@@ -17,7 +18,9 @@ import { AppModule } from "./app.module";
  * provider 로 등록한다 (DI 컨테이너 안에서 의존성 받기 위함).
  */
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Render 등 리버스 프록시 환경에서 X-Forwarded-* 헤더를 신뢰하도록 설정
+  app.set("trust proxy", 1);
 
   // app.setGlobalPrefix("v1");
 
