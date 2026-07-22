@@ -62,7 +62,7 @@ export class AuthController {
   @UseGuards(AuthGuard("google"))
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     const tokens = await this.authService.socialLogin(req.user as any);
-    const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+    const frontendUrl = this.resolveFrontendUrl();
     res.redirect(
       `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
@@ -77,18 +77,11 @@ export class AuthController {
   @Get("kakao/callback")
   @UseGuards(AuthGuard("kakao"))
   async kakaoCallback(@Req() req: Request, @Res() res: Response) {
-    console.log(`[KakaoCallback] user=${JSON.stringify(req.user)}`);
-    try {
-      const tokens = await this.authService.socialLogin(req.user as any);
-      const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
-      console.log(`[KakaoCallback] redirecting to ${frontendUrl}/auth/callback`);
-      res.redirect(
-        `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
-      );
-    } catch (e) {
-      console.error(`[KakaoCallback] socialLogin error:`, e);
-      throw e;
-    }
+    const tokens = await this.authService.socialLogin(req.user as any);
+    const frontendUrl = this.resolveFrontendUrl();
+    res.redirect(
+      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+    );
   }
 
   @Get("profile")
@@ -115,5 +108,13 @@ export class AuthController {
   async changePassword(@Req() req: Request, @Body() dto: ChangePasswordDto) {
     const user = req.user as { userId: string };
     await this.authService.changePassword(user.userId, dto);
+  }
+
+  // CORS_ORIGIN이 쉼표 구분 복수 URL일 수 있으므로 비-localhost URL을 우선 선택
+  private resolveFrontendUrl(): string {
+    const origins = (process.env.CORS_ORIGIN ?? "http://localhost:3001")
+      .split(",")
+      .map((o) => o.trim());
+    return origins.find((o) => !o.includes("localhost")) ?? origins[0];
   }
 }
