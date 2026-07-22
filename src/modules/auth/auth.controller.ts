@@ -64,7 +64,7 @@ export class AuthController {
     const tokens = await this.authService.socialLogin(req.user as any);
     const frontendUrl = this.resolveFrontendUrl();
     res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${frontendUrl}/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 
@@ -80,7 +80,7 @@ export class AuthController {
     const tokens = await this.authService.socialLogin(req.user as any);
     const frontendUrl = this.resolveFrontendUrl();
     res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${frontendUrl}/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );
   }
 
