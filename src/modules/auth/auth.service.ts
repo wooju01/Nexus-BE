@@ -74,36 +74,49 @@ export class AuthService {
     email: string;
     name: string;
   }) {
-    const account = await this.prisma.account.findUnique({
-      where: {
-        provider_providerAccountId: {
+    const findAccount = () =>
+      this.prisma.account.findUnique({
+        where: {
+          provider_providerAccountId: {
+            provider: data.provider,
+            providerAccountId: data.providerAccountId,
+          },
+        },
+        include: { user: true },
+      });
+
+    const existing = await findAccount();
+    if (existing) return this.issueTokens(existing.user.id, existing.user.email);
+
+    // 유저 생성 (동시 요청으로 이미 생성된 경우 P2002 → 재조회)
+    let user = await this.prisma.user.findUnique({ where: { email: data.email } });
+    if (!user) {
+      try {
+        const username = await this.generateUniqueUsername(data.email);
+        user = await this.prisma.user.create({
+          data: { email: data.email, name: data.name, username },
+        });
+      } catch (e: any) {
+        if (e?.code !== "P2002") throw e;
+        user = await this.prisma.user.findUniqueOrThrow({ where: { email: data.email } });
+      }
+    }
+
+    // account 생성 (동시 요청으로 이미 생성된 경우 P2002 → 재조회)
+    try {
+      await this.prisma.account.create({
+        data: {
+          userId: user.id,
           provider: data.provider,
           providerAccountId: data.providerAccountId,
         },
-      },
-      include: { user: true },
-    });
-
-    if (account) return this.issueTokens(account.user.id, account.user.email);
-
-    let user = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (!user) {
-      const username = await this.generateUniqueUsername(data.email);
-      user = await this.prisma.user.create({
-        data: { email: data.email, name: data.name, username },
       });
+    } catch (e: any) {
+      if (e?.code !== "P2002") throw e;
+      const account = await findAccount();
+      if (account) return this.issueTokens(account.user.id, account.user.email);
+      throw e;
     }
-
-    await this.prisma.account.create({
-      data: {
-        userId: user.id,
-        provider: data.provider,
-        providerAccountId: data.providerAccountId,
-      },
-    });
 
     return this.issueTokens(user.id, user.email);
   }
