@@ -2,6 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-kakao";
 
+// Render 프록시가 느린 응답을 재시도하면 동일 코드로 교환이 2번 발생한다.
+// 첫 번째 교환 결과를 캐싱해 두 번째 요청이 재사용하도록 한다.
+const inFlightExchanges = new Map<
+  string,
+  Promise<{ err: any; at: string; rt: string; p: any }>
+>();
+
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy, "kakao") {
   constructor() {
@@ -18,22 +25,46 @@ export class KakaoStrategy extends PassportStrategy(Strategy, "kakao") {
       state: false,
     });
 
-    // 디버그: Kakao 토큰 엔드포인트로 전송되는 정확한 파라미터 확인
     const oauth2 = (this as any)._oauth2;
-    const origReq = (oauth2._request as Function).bind(oauth2);
-    oauth2._request = (
-      method: string,
-      url: string,
-      headers: any,
-      body: string,
-      token: any,
-      cb: any,
+    const origGetToken = (
+      oauth2.getOAuthAccessToken as Function
+    ).bind(oauth2);
+
+    oauth2.getOAuthAccessToken = (
+      code: string,
+      params: any,
+      callback: (...args: any[]) => void,
     ) => {
-      if (url.includes("/oauth/token")) {
-        console.log(`[KakaoStrategy] Token POST → ${url}`);
-        console.log(`[KakaoStrategy] Token body → ${body}`);
+      console.log(
+        `[KakaoStrategy] Token exchange: code=${code?.slice(0, 20)}...`,
+      );
+
+      const existing = inFlightExchanges.get(code);
+      if (existing) {
+        // Render 재시도: 동일 코드로 두 번째 요청 → 첫 번째 결과 재사용
+        console.log(
+          `[KakaoStrategy] Duplicate exchange — reusing first result for code=${code?.slice(0, 20)}...`,
+        );
+        void existing.then(({ err, at, rt, p }) => callback(err, at, rt, p));
+        return;
       }
-      return origReq(method, url, headers, body, token, cb);
+
+      let resolve!: (v: { err: any; at: string; rt: string; p: any }) => void;
+      const promise = new Promise<{ err: any; at: string; rt: string; p: any }>(
+        (res) => {
+          resolve = res;
+        },
+      );
+      inFlightExchanges.set(code, promise);
+      setTimeout(() => inFlightExchanges.delete(code), 60_000);
+
+      origGetToken(code, params, (err: any, at: string, rt: string, p: any) => {
+        console.log(
+          `[KakaoStrategy] Token result: hasToken=${!!at} err=${err ? JSON.stringify(err) : "none"}`,
+        );
+        resolve({ err, at, rt, p });
+        callback(err, at, rt, p);
+      });
     };
   }
 
