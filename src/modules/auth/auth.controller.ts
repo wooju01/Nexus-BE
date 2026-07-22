@@ -77,11 +77,18 @@ export class AuthController {
   @Get("kakao/callback")
   @UseGuards(AuthGuard("kakao"))
   async kakaoCallback(@Req() req: Request, @Res() res: Response) {
-    const tokens = await this.authService.socialLogin(req.user as any);
-    const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
-    res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
-    );
+    console.log(`[KakaoCallback] user=${JSON.stringify(req.user)}`);
+    try {
+      const tokens = await this.authService.socialLogin(req.user as any);
+      const frontendUrl = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+      console.log(`[KakaoCallback] redirecting to ${frontendUrl}/auth/callback`);
+      res.redirect(
+        `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      );
+    } catch (e) {
+      console.error(`[KakaoCallback] socialLogin error:`, e);
+      throw e;
+    }
   }
 
   @Get("profile")
