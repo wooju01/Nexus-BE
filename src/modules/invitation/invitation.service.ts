@@ -8,6 +8,7 @@ import {
 import { Role } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import { MailService } from "../mail/mail.service";
+import { ChatGateway } from "../gateway/chat.gateway";
 import { CreateInvitationDto } from "./dto/create-invitation.dto";
 
 const INVITATION_EXPIRES_DAYS = 7;
@@ -30,6 +31,7 @@ export class InvitationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly gateway: ChatGateway,
   ) {}
 
   // POST /workspaces/:workspaceId/invitations
@@ -54,6 +56,7 @@ export class InvitationService {
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
       select: {
+        id: true,
         memberships: {
           where: { workspaceId },
           select: { id: true },
@@ -63,6 +66,12 @@ export class InvitationService {
     if (existingUser && existingUser.memberships.length > 0) {
       throw new ConflictException("이미 워크스페이스 멤버입니다.");
     }
+
+    // Nexus 계정이 있는 기존 유저라면 초대 완료 후 inbox 알림을 생성
+    const inviteeUserId =
+      existingUser && existingUser.memberships.length === 0
+        ? existingUser.id
+        : null;
 
     // 같은 이메일에 살아있는 pending 초대가 있으면 충돌 (먼저 취소 후 재발급 정책)
     const now = new Date();
@@ -109,6 +118,19 @@ export class InvitationService {
       token: invitation.token,
       expiresAt: invitation.expiresAt,
     });
+
+    if (inviteeUserId) {
+      const notif = await this.prisma.notification.create({
+        data: {
+          userId: inviteeUserId,
+          type: "WORKSPACE_INVITED",
+          title: `${invitation.workspace.name} 워크스페이스 초대`,
+          body: `${invitation.creator.name}님이 ${invitation.workspace.name} 워크스페이스에 초대했습니다.`,
+          metadata: { invitationToken: invitation.token },
+        },
+      });
+      this.gateway.notifyUser(notif.userId, notif);
+    }
 
     return this.toResponse(invitation);
   }
