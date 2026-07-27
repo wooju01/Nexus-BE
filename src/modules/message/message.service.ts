@@ -5,7 +5,8 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { Role } from "@prisma/client";
+import { ChatGateway } from "../gateway/chat.gateway";
+import { ChannelType, Role } from "@prisma/client";
 import type {
   SendMessageDto,
   UpdateMessageDto,
@@ -19,7 +20,10 @@ const DEFAULT_LIMIT = 50;
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: ChatGateway,
+  ) {}
 
   // GET /channels/:channelId/messages
   async getMessages(userId: string, channelId: string, query: MessageQueryDto) {
@@ -84,8 +88,8 @@ export class MessageService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const message = await tx.message.create({
+    const message = await this.prisma.$transaction(async (tx) => {
+      const msg = await tx.message.create({
         data: {
           channelId,
           authorId: userId,
@@ -97,7 +101,7 @@ export class MessageService {
       if (dto.attachments?.length) {
         await tx.messageAttachment.createMany({
           data: dto.attachments.map((att: AttachmentDto) => ({
-            messageId: message.id,
+            messageId: msg.id,
             uploaderId: userId,
             fileName: att.fileName,
             fileUrl: att.url,
@@ -109,7 +113,7 @@ export class MessageService {
       }
 
       return tx.message.findUniqueOrThrow({
-        where: { id: message.id },
+        where: { id: msg.id },
         include: {
           author: { select: { id: true, name: true, avatar: true } },
           attachments: {
@@ -125,6 +129,40 @@ export class MessageService {
         },
       });
     });
+
+    // DM 채널이면 상대방에게 수신 알림 (best-effort)
+    void (async () => {
+      const channel = await this.prisma.channel.findUnique({
+        where: { id: channelId },
+        select: {
+          type: true,
+          members: {
+            where: { userId: { not: userId } },
+            select: { userId: true },
+          },
+        },
+      });
+      if (channel?.type !== ChannelType.DM || channel.members.length === 0) return;
+      const notifications = await Promise.all(
+        channel.members.map((m) =>
+          this.prisma.notification.create({
+            data: {
+              userId: m.userId,
+              type: "DM_RECEIVED",
+              title: `${message.author.name}님의 DM`,
+              body: "새 메시지가 도착했습니다.",
+              linkUrl: `/channels/${channelId}`,
+              metadata: { channelId, messageId: message.id },
+            },
+          }),
+        ),
+      );
+      for (const notif of notifications) {
+        this.gateway.notifyUser(notif.userId, notif);
+      }
+    })();
+
+    return message;
   }
 
   // PATCH /messages/:messageId

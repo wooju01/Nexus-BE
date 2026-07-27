@@ -96,12 +96,33 @@ export class TaskService {
       });
     });
 
-    // 같은 프로젝트 보드를 보는 모든 클라이언트에게 알림.
-    // FE 는 actorUserId 로 자기 자신이 일으킨 변경을 echo 무시 가능.
     this.gateway.broadcastToProject("task.created", projectId, {
       task,
       actorUserId: userId,
     });
+
+    // 담당자에게 배정 알림 (best-effort)
+    const recipientIds = task.assignees
+      .map((a) => a.userId)
+      .filter((id) => id !== userId);
+    if (recipientIds.length > 0) {
+      void Promise.all(
+        recipientIds.map((recipientId) =>
+          this.prisma.notification
+            .create({
+              data: {
+                userId: recipientId,
+                type: "TASK_ASSIGNED",
+                title: `태스크 배정: ${task.title}`,
+                body: `${task.creator.name}님이 태스크를 배정했습니다.`,
+                linkUrl: `/projects/${projectId}?task=${task.id}`,
+                metadata: { taskId: task.id },
+              },
+            })
+            .then((notif) => this.gateway.notifyUser(notif.userId, notif)),
+        ),
+      );
+    }
 
     return task;
   }
@@ -143,9 +164,12 @@ export class TaskService {
   async updateTask(taskId: string, userId: string, dto: UpdateTaskDto) {
     const task = await this.prisma.task.findFirst({
       where: { id: taskId, deletedAt: null },
+      include: { assignees: { select: { userId: true } } },
     });
     if (!task) throw new NotFoundException("태스크를 찾을 수 없습니다.");
     await this.requireMembership(task.projectId, userId);
+
+    const prevAssigneeIds = new Set(task.assignees.map((a) => a.userId));
 
     const { assigneeIds, labelIds, columnId, dueDate, ...rest } = dto;
 
@@ -197,6 +221,31 @@ export class TaskService {
       task: updated,
       actorUserId: userId,
     });
+
+    // 새로 추가된 담당자에게만 배정 알림 (best-effort)
+    if (assigneeIds) {
+      const newRecipientIds = assigneeIds.filter(
+        (id) => !prevAssigneeIds.has(id) && id !== userId,
+      );
+      if (newRecipientIds.length > 0) {
+        void Promise.all(
+          newRecipientIds.map((recipientId) =>
+            this.prisma.notification
+              .create({
+                data: {
+                  userId: recipientId,
+                  type: "TASK_ASSIGNED",
+                  title: `태스크 배정: ${updated.title}`,
+                  body: `${updated.creator.name}님이 태스크를 배정했습니다.`,
+                  linkUrl: `/projects/${task.projectId}?task=${taskId}`,
+                  metadata: { taskId },
+                },
+              })
+              .then((notif) => this.gateway.notifyUser(notif.userId, notif)),
+          ),
+        );
+      }
+    }
 
     return updated;
   }

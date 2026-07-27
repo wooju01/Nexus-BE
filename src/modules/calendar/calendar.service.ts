@@ -7,6 +7,7 @@ import {
 import { Role, RsvpStatus } from "@prisma/client";
 
 import { PrismaService } from "../../prisma/prisma.service";
+import { ChatGateway } from "../gateway/chat.gateway";
 import {
   CalendarEventResponse,
   toCalendarEventResponse,
@@ -47,7 +48,10 @@ export class CalendarService {
     },
   } as const;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: ChatGateway,
+  ) {}
 
   // ───────────────────────── List / Get ─────────────────────────
 
@@ -134,6 +138,33 @@ export class CalendarService {
       },
       include: CalendarService.INCLUDE_PARTICIPANTS,
     });
+
+    // 초대된 참가자에게 알림 (best-effort)
+    if (otherParticipantIds.length > 0) {
+      void (async () => {
+        const creator = await this.prisma.user.findUnique({
+          where: { id: createdById },
+          select: { name: true },
+        });
+        const notifications = await Promise.all(
+          otherParticipantIds.map((participantId) =>
+            this.prisma.notification.create({
+              data: {
+                userId: participantId,
+                type: "EVENT_INVITED",
+                title: `일정 초대: ${dto.title}`,
+                body: `${creator?.name ?? "누군가"}님이 일정에 초대했습니다.`,
+                linkUrl: `/calendar`,
+                metadata: { eventId: event.id },
+              },
+            }),
+          ),
+        );
+        for (const notif of notifications) {
+          this.gateway.notifyUser(notif.userId, notif);
+        }
+      })();
+    }
 
     return toCalendarEventResponse(event);
   }

@@ -51,6 +51,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         await this.setPresence(payload.sub, PresenceStatus.ONLINE);
       }
 
+      // 개인 알림 룸 — 이 유저에게만 보내는 notification.created 이벤트 수신용
+      await client.join(`user:${payload.sub}`);
+
       // DM 채널 룸 자동 join — FE가 channel.join을 emit하기 전에도 알림 수신 가능
       const dmChannels = await this.prisma.channelMember.findMany({
         where: {
@@ -151,6 +154,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /** TaskService 등 외부 모듈에서 보드 이벤트를 브로드캐스트할 때 사용. */
   broadcastToProject(event: string, projectId: string, payload: unknown) {
     this.server.to(`project:${projectId}`).emit(event, payload);
+  }
+
+  /** 특정 유저에게 알림 이벤트를 전송. NotificationService 계열에서 호출. */
+  notifyUser(userId: string, notification: unknown) {
+    this.server.to(`user:${userId}`).emit("notification.created", notification);
   }
 
   // 사용자 상태 업데이트 및 클라이언트에 알림

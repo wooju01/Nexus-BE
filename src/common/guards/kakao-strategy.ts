@@ -74,6 +74,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy, "kakao") {
     profile: any,
     done: any,
   ) {
+    console.log(`[KakaoStrategy] validate: profile.id=${profile?.id}`);
     const { id, displayName, _json } = profile;
     const email = _json?.kakao_account?.email;
 

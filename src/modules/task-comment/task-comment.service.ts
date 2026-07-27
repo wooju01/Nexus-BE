@@ -45,6 +45,39 @@ export class TaskCommentService {
       actorUserId: userId,
     });
 
+    // 태스크 담당자에게 댓글 알림 (best-effort)
+    void (async () => {
+      const taskDetail = await this.prisma.task.findUnique({
+        where: { id: task.id },
+        select: {
+          title: true,
+          assignees: { select: { userId: true } },
+        },
+      });
+      if (!taskDetail) return;
+      const recipientIds = taskDetail.assignees
+        .map((a) => a.userId)
+        .filter((id) => id !== userId);
+      if (recipientIds.length === 0) return;
+      const notifications = await Promise.all(
+        recipientIds.map((recipientId) =>
+          this.prisma.notification.create({
+            data: {
+              userId: recipientId,
+              type: "TASK_COMMENTED",
+              title: `태스크 댓글: ${taskDetail.title}`,
+              body: `${comment.author.name}님이 댓글을 남겼습니다.`,
+              linkUrl: `/projects/${task.projectId}?task=${task.id}`,
+              metadata: { taskId: task.id, commentId: comment.id },
+            },
+          }),
+        ),
+      );
+      for (const notif of notifications) {
+        this.gateway.notifyUser(notif.userId, notif);
+      }
+    })();
+
     return comment;
   }
 

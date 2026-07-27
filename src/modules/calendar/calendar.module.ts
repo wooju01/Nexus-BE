@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { CalendarController } from "./calendar.controller";
 import { CalendarService } from "./calendar.service";
+import { GatewayModule } from "../gateway/gateway.module";
 
 /**
  * 캘린더 도메인 모듈.
@@ -11,6 +12,7 @@ import { CalendarService } from "./calendar.service";
  * 별도 provider 등록 없이 `common/guards` 의 클래스를 그대로 가져다 씀.
  */
 @Module({
+  imports: [GatewayModule],
   controllers: [CalendarController],
   providers: [CalendarService],
 })

@@ -22,7 +22,7 @@ export class MemberService {
       where: { workspaceId },
       include: {
         user: {
-          select: { id: true, name: true, avatar: true, status: true },
+          select: { id: true, name: true, jobTitle: true, avatar: true, status: true },
         },
       },
       orderBy: { joinedAt: "asc" },
